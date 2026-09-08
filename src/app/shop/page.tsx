@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
+import { db } from "@/db";
+import { products } from "@/db/schema";
 import { ShopView } from "@/components/ShopView";
 import { matchesCategory } from "@/lib/catalog";
-import { getProducts } from "@/lib/shopify";
 
 export const dynamic = "force-dynamic";
 
@@ -32,10 +33,8 @@ export default async function ShopPage({
     .filter(Boolean);
   const sort = first(sp.sort) ?? "featured";
 
-  // جلب كافة المنتجات مباشرة من Shopify
-  const all = (await getProducts()) ?? [];
+  const all = await db.select().from(products);
 
-  // حساب أعداد المنتجات بكل فئة
   const counts: Record<string, number> = {};
   for (const p of all) {
     if (p.category) {
@@ -45,7 +44,6 @@ export default async function ShopPage({
 
   let filtered = all;
 
-  // التصفية باستخدام دالة المطابقة المرنة
   if (categories.length > 0) {
     filtered = filtered.filter((p) =>
       categories.some((cat) => matchesCategory(p.category, p.tags ?? [], cat))
@@ -66,7 +64,7 @@ export default async function ShopPage({
   switch (sort) {
     case "newest":
       filtered = [...filtered].sort(
-        (a, b) => new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime()
+        (a, b) => a.createdAt.getTime() - b.createdAt.getTime()
       );
       break;
     case "price-asc":
@@ -76,7 +74,11 @@ export default async function ShopPage({
       filtered = [...filtered].sort((a, b) => b.priceCents - a.priceCents);
       break;
     default:
-      filtered = [...filtered];
+      filtered = [...filtered].sort(
+        (a, b) =>
+          Number(b.featured) - Number(a.featured) ||
+          b.createdAt.getTime() - a.createdAt.getTime()
+      );
   }
 
   return (
