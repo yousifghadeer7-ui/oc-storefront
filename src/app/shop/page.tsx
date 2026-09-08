@@ -64,7 +64,7 @@ export default async function ShopPage({
   switch (sort) {
     case "newest":
       filtered = [...filtered].sort(
-        (a, b) => a.createdAt.getTime() - b.createdAt.getTime()
+        (a, b) => new Date(a.createdAt ?? 0).getTime() - new Date(b.createdAt ?? 0).getTime()
       );
       break;
     case "price-asc":
@@ -77,7 +77,7 @@ export default async function ShopPage({
       filtered = [...filtered].sort(
         (a, b) =>
           Number(b.featured) - Number(a.featured) ||
-          b.createdAt.getTime() - a.createdAt.getTime()
+          new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime()
       );
   }
 
