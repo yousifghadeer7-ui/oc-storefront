@@ -23,3 +23,7 @@ export function matchesCategory(
   if (productCategory && productCategory.toLowerCase().trim() === target) return true;
   return productTags.some((tag) => tag.toLowerCase().trim() === target);
 }
+
+export async function getProducts() {
+  return [];
+}
