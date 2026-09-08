@@ -1,12 +1,10 @@
 import Link from "next/link";
-import { db } from "@/db";
-import { products } from "@/db/schema";
-
-export const dynamic = "force-dynamic";
-
+import { getProducts } from "@/lib/catalog";
 import { ProductCard } from "@/components/ProductCard";
 import { Newsletter } from "@/components/Newsletter";
 import { IconArrow } from "@/components/Icons";
+
+export const dynamic = "force-dynamic";
 
 const px = (id: number, w: number, h: number) =>
   `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&fit=crop&w=${w}&h=${h}`;
@@ -25,47 +23,32 @@ const STANDARDS = [
 ] as const;
 
 export default async function HomePage() {
-  const all = await db.select().from(products);
-  const featured = all.filter((p) => p.featured).slice(0, 4);
-  const fresh = [...all]
-    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-    .slice(0, 8);
+  const all = (await getProducts()) || [];
+  const featured = all.slice(0, 4);
 
   return (
     <>
-      {/* hero */}
+      {/* Hero */}
       <section className="relative h-[82vh] min-h-[540px] w-full overflow-hidden bg-ink">
         <img
           src={px(20231996, 1800, 1000)}
-          alt="Model in a dark tailored coat, studio shadow"
+          alt="Model in a dark tailored coat"
           className="absolute inset-0 h-full w-full object-cover opacity-90"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-ink/80 via-ink/20 to-ink/30" />
         <div className="absolute inset-x-0 bottom-0 px-4 pb-14 md:px-8 md:pb-20">
           <div className="mx-auto max-w-7xl">
-            <p className="text-[10px] font-semibold tracking-[0.4em] uppercase text-paper/70 animate-fade-up">
+            <p className="text-[10px] font-semibold tracking-[0.4em] uppercase text-paper/70">
               Autumn – Winter 2026
             </p>
-
-            <h1
-              className="mt-4 max-w-3xl font-display text-5xl leading-[0.98] text-paper md:text-8xl animate-fade-up"
-              style={{ animationDelay: "90ms" }}
-            >
+            <h1 className="mt-4 max-w-3xl font-display text-5xl leading-[0.98] text-paper md:text-8xl">
               Dressed in <br />
               <span className="italic">quiet power.</span>
             </h1>
-
-            <p
-              className="mt-6 max-w-xl text-sm leading-relaxed text-paper/80 md:text-base animate-fade-up"
-              style={{ animationDelay: "180ms" }}
-            >
-              A capsule of heavy outerwear, razor-sharp tailoring, and traceably sourced cashmere. Designed for the modern wardrobe.
+            <p className="mt-6 max-w-xl text-sm leading-relaxed text-paper/80 md:text-base">
+              A capsule of heavy outerwear, razor-sharp tailoring, and traceably sourced cashmere.
             </p>
-
-            <div
-              className="mt-8 flex flex-wrap gap-4 animate-fade-up"
-              style={{ animationDelay: "270ms" }}
-            >
+            <div className="mt-8 flex flex-wrap gap-4">
               <Link
                 href="/shop"
                 className="group inline-flex items-center gap-3 bg-paper px-8 py-4 text-xs font-semibold uppercase tracking-[0.25em] text-ink transition hover:bg-gold"
@@ -73,18 +56,12 @@ export default async function HomePage() {
                 Explore Collection
                 <IconArrow className="h-4 w-4 transition group-hover:translate-x-1" />
               </Link>
-              <Link
-                href="/shop?category=Tailoring"
-                className="inline-flex items-center gap-3 border border-paper/40 px-8 py-4 text-xs font-semibold uppercase tracking-[0.25em] text-paper transition hover:border-paper hover:bg-paper/10"
-              >
-                Explore Tailoring
-              </Link>
             </div>
           </div>
         </div>
       </section>
 
-      {/* philosophy strip */}
+      {/* Philosophy */}
       <section className="bg-ink border-b border-paper/10 py-12 text-paper">
         <div className="mx-auto max-w-7xl px-4 md:px-8">
           <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
@@ -98,7 +75,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* category tiles */}
+      {/* Category Tiles */}
       <section className="bg-sand/30 py-20 px-4 md:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="flex items-end justify-between border-b border-sand pb-6">
@@ -106,21 +83,14 @@ export default async function HomePage() {
               <p className="text-[10px] font-semibold tracking-[0.3em] uppercase text-taupe">Departments</p>
               <h2 className="mt-2 font-display text-3xl text-ink md:text-4xl">Shop by Category</h2>
             </div>
-            <Link
-              href="/shop"
-              className="text-xs font-semibold uppercase tracking-[0.2em] text-ink hover:text-gold"
-            >
+            <Link href="/shop" className="text-xs font-semibold uppercase tracking-[0.2em] text-ink hover:text-gold">
               All Categories &rarr;
             </Link>
           </div>
 
           <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {TILES.map((t) => (
-              <Link
-                key={t.label}
-                href={t.href}
-                className="group relative h-[420px] overflow-hidden bg-ink"
-              >
+              <Link key={t.label} href={t.href} className="group relative h-[420px] overflow-hidden bg-ink">
                 <img
                   src={t.img}
                   alt={t.label}
@@ -139,59 +109,28 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* featured */}
-      <section className="bg-paper py-20 px-4 md:px-8">
-        <div className="mx-auto max-w-7xl">
-          <div className="flex items-end justify-between border-b border-sand pb-6">
-            <div>
-              <p className="text-[10px] font-semibold tracking-[0.3em] uppercase text-taupe">Curated Selection</p>
-              <h2 className="mt-2 font-display text-3xl text-ink md:text-4xl">Featured Pieces</h2>
-            </div>
-            <Link
-              href="/shop"
-              className="text-xs font-semibold uppercase tracking-[0.2em] text-ink hover:text-gold"
-            >
-              View All ({all.length})
-            </Link>
-          </div>
-
-          <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
-            {featured.map((p) => (
-              <ProductCard key={p.id} product={p} />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* new arrivals spot */}
-      <section className="bg-sand/20 py-20 px-4 md:px-8">
-        <div className="mx-auto max-w-7xl">
-          <div className="grid grid-cols-1 gap-12 lg:grid-cols-12 lg:items-center">
-            <div className="lg:col-span-5">
-              <span className="text-[10px] font-semibold tracking-[0.3em] uppercase text-taupe">
-                The New Standard
-              </span>
-              <h2 className="mt-3 font-display text-3xl text-ink md:text-5xl">
-                Made to outlast trends.
-              </h2>
-              <p className="mt-6 text-sm leading-relaxed text-taupe">
-                Every piece in our new arrivals collection is constructed using traditional tailoring methods combined with traceably sourced fabrics.
-              </p>
-              <Link
-                href="/shop"
-                className="mt-8 inline-flex items-center gap-3 bg-ink px-8 py-4 text-xs font-semibold uppercase tracking-[0.25em] text-paper transition hover:bg-gold hover:text-ink"
-              >
-                Discover New Arrivals
+      {/* Featured Products from Shopify */}
+      {featured.length > 0 && (
+        <section className="bg-paper py-20 px-4 md:px-8">
+          <div className="mx-auto max-w-7xl">
+            <div className="flex items-end justify-between border-b border-sand pb-6">
+              <div>
+                <p className="text-[10px] font-semibold tracking-[0.3em] uppercase text-taupe">Curated Selection</p>
+                <h2 className="mt-2 font-display text-3xl text-ink md:text-4xl">Featured Pieces</h2>
+              </div>
+              <Link href="/shop" className="text-xs font-semibold uppercase tracking-[0.2em] text-ink hover:text-gold">
+                View All ({all.length})
               </Link>
             </div>
-            <div className="grid grid-cols-2 gap-4 lg:col-span-7">
-              {fresh.slice(0, 2).map((p) => (
-                <ProductCard key={p.id} product={p} />
+
+            <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
+              {featured.map((p) => (
+                <ProductCard key={p.id} product={p as any} />
               ))}
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       <Newsletter />
     </>
