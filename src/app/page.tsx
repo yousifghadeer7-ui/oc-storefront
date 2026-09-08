@@ -17,13 +17,7 @@ const TILES = [
 ];
 
 export default async function HomePage() {
-  let all: any[] = [];
-  try {
-    all = await getProducts();
-  } catch (e) {
-    all = [];
-  }
-
+  const all = await getProducts();
   const featured = all.slice(0, 4);
 
   return (
@@ -64,7 +58,7 @@ export default async function HomePage() {
           <div className="flex items-end justify-between border-b border-sand pb-6">
             <div>
               <p className="text-[10px] font-semibold tracking-[0.3em] uppercase text-taupe">Curated Selection</p>
-              <h2 className="mt-2 font-display text-3xl text-ink md:text-4xl">Featured Pieces ({all.length})</h2>
+              <h2 className="mt-2 font-display text-3xl text-ink md:text-4xl">Featured Pieces</h2>
             </div>
             <Link href="/shop" className="text-xs font-semibold uppercase tracking-[0.2em] text-ink hover:text-gold">
               View All
