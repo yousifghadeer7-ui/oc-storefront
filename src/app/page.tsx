@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { getProducts } from "@/lib/catalog";
 import { Newsletter } from "@/components/Newsletter";
 import { IconArrow } from "@/components/Icons";
 
@@ -21,15 +20,7 @@ const STANDARDS = [
   ["Made to outlast", "Patterns cut for a decade of wear, with repairs offered for life."],
 ] as const;
 
-export default async function HomePage() {
-  let all: any[] = [];
-  try {
-    all = (await getProducts()) || [];
-  } catch (e) {
-    all = [];
-  }
-  const featured = all.slice(0, 4);
-
+export default function HomePage() {
   return (
     <>
       {/* Hero */}
@@ -112,41 +103,6 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* Featured Products */}
-      {featured.length > 0 && (
-        <section className="bg-paper py-20 px-4 md:px-8">
-          <div className="mx-auto max-w-7xl">
-            <div className="flex items-end justify-between border-b border-sand pb-6">
-              <div>
-                <p className="text-[10px] font-semibold tracking-[0.3em] uppercase text-taupe">Curated Selection</p>
-                <h2 className="mt-2 font-display text-3xl text-ink md:text-4xl">Featured Pieces</h2>
-              </div>
-              <Link href="/shop" className="text-xs font-semibold uppercase tracking-[0.2em] text-ink hover:text-gold">
-                View All ({all.length})
-              </Link>
-            </div>
-
-            <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
-              {featured.map((p) => (
-                <div key={p.id} className="group cursor-pointer">
-                  <div className="aspect-[3/4] w-full overflow-hidden bg-sand/30">
-                    <img
-                      src={p.images?.[0] || ""}
-                      alt={p.name}
-                      className="h-full w-full object-cover object-center transition duration-300 group-hover:scale-105"
-                    />
-                  </div>
-                  <h3 className="mt-4 font-display text-lg text-ink">{p.name}</h3>
-                  <p className="mt-1 text-sm font-semibold text-gold">
-                    ${((p.priceCents || 0) / 100).toFixed(2)}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
 
       <Newsletter />
     </>
