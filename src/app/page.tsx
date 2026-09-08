@@ -1,14 +1,13 @@
 import Link from "next/link";
-import { db } from "@/db";
-import { products } from "@/db/schema";
-
-export const dynamic = "force-dynamic";
+import { getProducts } from "@/lib/catalog";
 import { ProductCard } from "@/components/ProductCard";
 import { Newsletter } from "@/components/Newsletter";
 import { IconArrow } from "@/components/Icons";
 
+export const dynamic = "force-dynamic";
+
 const px = (id: number, w: number, h: number) =>
-  `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=${h}&w=${w}`;
+  `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&fit=crop&w=${w}&h=${h}`;
 
 const TILES = [
   { label: "Outerwear", href: "/shop?category=Outerwear", img: px(19169191, 700, 933) },
@@ -18,17 +17,15 @@ const TILES = [
 ];
 
 const STANDARDS = [
-  ["Natural cloth only", "Wool, silk, cotton, cashmere and leather — traceable and chosen to age well."],
+  ["Natural cloth only", "Wool, silk, cotton, cashmere and leather – traceable and chosen to age well."],
   ["Finished by hand", "Seams, hems and closures completed by makers we know by name."],
   ["Made to outlast", "Patterns cut for a decade of wear, with repairs offered for life."],
 ] as const;
 
 export default async function HomePage() {
-  const all = await db.select().from(products);
-  const featured = all.filter((p) => p.featured).slice(0, 4);
-  const fresh = [...all]
-    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-    .slice(0, 8);
+  const all = await getProducts();
+  const featured = all.filter((p: any) => p.featured).slice(0, 4);
+  const fresh = [...all].slice(0, 8);
 
   return (
     <>
