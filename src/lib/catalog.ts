@@ -25,66 +25,26 @@ export function matchesCategory(
 }
 
 export async function getProducts() {
-  try {
-    const res = await fetch("https://kw8nk1-ix.myshopify.com/api/2024-01/graphql.json", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Shopify-Storefront-Access-Token": "50af4161e6230c8bea6f3e4191448b33",
-      },
-      body: JSON.stringify({
-        query: `{
-          products(first: 50) {
-            edges {
-              node {
-                id
-                title
-                description
-                productType
-                tags
-                variants(first: 1) { edges { node { price { amount } } } }
-                images(first: 1) { edges { node { url } } }
-              }
-            }
-          }
-        }`
-      }),
-      cache: "no-store"
-    });
-
-    const json = await res.json();
-    const items = json?.data?.products?.edges || [];
-
-    if (items.length > 0) {
-      return items.map((edge: any) => {
-        const p = edge.node;
-        return {
-          id: p.id.split("/").pop() || p.id,
-          name: p.title,
-          slug: p.title.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
-          description: p.description || "",
-          category: p.productType || "Dresses",
-          tags: p.tags || [],
-          priceCents: Math.round(parseFloat(p.variants?.edges[0]?.node?.price?.amount || "100") * 100),
-          images: [p.images?.edges[0]?.node?.url || "https://images.pexels.com/photos/17871655/pexels-photo-17871655.jpeg"],
-          featured: true,
-        };
-      });
-    }
-  } catch (e) {
-    console.error(e);
-  }
-
-  // ارجاع قيم افتراضية لضمان عمل الواجهة وعدم اختفائها أبداً
   return [
     {
       id: "1",
+      name: "Classic Tailored Coat",
+      slug: "classic-tailored-coat",
+      description: "A timeless dark coat cut from premium wool.",
+      category: "Outerwear",
+      tags: ["Outerwear"],
+      priceCents: 45000,
+      images: ["https://images.pexels.com/photos/19169191/pexels-photo-19169191.jpeg"],
+      featured: true,
+    },
+    {
+      id: "2",
       name: "Silk Evening Dress",
       slug: "silk-evening-dress",
-      description: "Elegant silk dress",
+      description: "Elegant silk dress designed for evening wear.",
       category: "Dresses",
       tags: ["Dresses"],
-      priceCents: 25000,
+      priceCents: 32000,
       images: ["https://images.pexels.com/photos/17871655/pexels-photo-17871655.jpeg"],
       featured: true,
     }
