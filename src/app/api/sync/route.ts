@@ -4,8 +4,13 @@ import { products } from "@/db/schema";
 
 export async function GET() {
   try {
-    const domain = process.env.SHOPIFY_STORE_DOMAIN;
-    const token = process.env.SHOPIFY_ADMIN_ACCESS_TOKEN || process.env.SHOPIFY_STOREFRONT_ACCESS_TOKEN;
+    const domain =
+      process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN ||
+      process.env.SHOPIFY_STORE_DOMAIN;
+    const token =
+      process.env.NEXT_PUBLIC_SHOPIFY_STOREFRONT_ACCESS_TOKEN ||
+      process.env.SHOPIFY_STOREFRONT_ACCESS_TOKEN ||
+      process.env.SHOPIFY_ADMIN_ACCESS_TOKEN;
 
     if (!domain || !token) {
       return NextResponse.json(
@@ -14,7 +19,6 @@ export async function GET() {
       );
     }
 
-    // جلب المنتجات من Shopify Storefront GraphQL API
     const response = await fetch(`https://${domain}/api/2024-01/graphql.json`, {
       method: "POST",
       headers: {
@@ -61,16 +65,19 @@ export async function GET() {
     const shopifyProducts = json?.data?.products?.edges || [];
 
     if (shopifyProducts.length === 0) {
-      return NextResponse.json({ message: "No products found in Shopify", raw: json });
+      return NextResponse.json({
+        message: "No products found in Shopify",
+        raw: json,
+      });
     }
 
-    // مسح المنتجات القديمة وإعادة تعبئة قاعدة البيانات
     await db.delete(products);
 
     for (const edge of shopifyProducts) {
       const node = edge.node;
-      const priceAmount = parseFloat(node.variants?.edges[0]?.node?.price?.amount || "0");
-      const imageUrl = node.images?.edges[0]?.node?.url || "";
+      const priceAmount = parseFloat(
+        node.variants?.edges[0]?.node?.price?.amount || "0"
+      );
 
       await db.insert(products).values({
         id: node.id.split("/").pop() || Math.random().toString(),
