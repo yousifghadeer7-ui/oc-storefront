@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { getProducts } from "@/lib/catalog";
-import { ProductCard } from "@/components/ProductCard";
 import { Newsletter } from "@/components/Newsletter";
 import { IconArrow } from "@/components/Icons";
 
@@ -23,7 +22,12 @@ const STANDARDS = [
 ] as const;
 
 export default async function HomePage() {
-  const all = (await getProducts()) || [];
+  let all: any[] = [];
+  try {
+    all = (await getProducts()) || [];
+  } catch (e) {
+    all = [];
+  }
   const featured = all.slice(0, 4);
 
   return (
@@ -75,7 +79,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Category Tiles */}
+      {/* Categories */}
       <section className="bg-sand/30 py-20 px-4 md:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="flex items-end justify-between border-b border-sand pb-6">
@@ -109,7 +113,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Featured Products from Shopify */}
+      {/* Featured Products */}
       {featured.length > 0 && (
         <section className="bg-paper py-20 px-4 md:px-8">
           <div className="mx-auto max-w-7xl">
@@ -125,7 +129,19 @@ export default async function HomePage() {
 
             <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
               {featured.map((p) => (
-                <ProductCard key={p.id} product={p as any} />
+                <div key={p.id} className="group cursor-pointer">
+                  <div className="aspect-[3/4] w-full overflow-hidden bg-sand/30">
+                    <img
+                      src={p.images?.[0] || ""}
+                      alt={p.name}
+                      className="h-full w-full object-cover object-center transition duration-300 group-hover:scale-105"
+                    />
+                  </div>
+                  <h3 className="mt-4 font-display text-lg text-ink">{p.name}</h3>
+                  <p className="mt-1 text-sm font-semibold text-gold">
+                    ${((p.priceCents || 0) / 100).toFixed(2)}
+                  </p>
+                </div>
               ))}
             </div>
           </div>
