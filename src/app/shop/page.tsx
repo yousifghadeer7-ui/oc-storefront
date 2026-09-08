@@ -1,94 +1,25 @@
-import type { Metadata } from "next";
-import { db } from "@/db";
-import { products } from "@/db/schema";
-import { ShopView } from "@/components/ShopView";
-import { matchesCategory } from "@/lib/catalog";
+import { getProducts } from "@/lib/catalog";
+import { ProductCard } from "@/components/ProductCard";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Shop All — OC",
-  description: "The full OC collection: outerwear, tailoring, knitwear and more.",
-};
-
-interface SearchParams {
-  q?: string | string[];
-  category?: string | string[];
-  sort?: string | string[];
-}
-
-const first = (v: string | string[] | undefined) =>
-  Array.isArray(v) ? v[0] : v;
-
-export default async function ShopPage({
-  searchParams,
-}: {
-  searchParams: Promise<SearchParams>;
-}) {
-  const sp = await searchParams;
-
-  const q = first(sp.q)?.trim();
-  const categories = (first(sp.category) ?? "")
-    .split(",")
-    .filter(Boolean);
-  const sort = first(sp.sort) ?? "featured";
-
-  const all = await db.select().from(products);
-
-  const counts: Record<string, number> = {};
-  for (const p of all) {
-    if (p.category) {
-      counts[p.category] = (counts[p.category] ?? 0) + 1;
-    }
-  }
-
-  let filtered = all;
-
-  if (categories.length > 0) {
-    filtered = filtered.filter((p) =>
-      categories.some((cat) => matchesCategory(p.category, p.tags ?? [], cat))
-    );
-  }
-
-  if (q) {
-    const needle = q.toLowerCase();
-    filtered = filtered.filter(
-      (p) =>
-        p.name.toLowerCase().includes(needle) ||
-        p.category?.toLowerCase().includes(needle) ||
-        p.description?.toLowerCase().includes(needle) ||
-        p.vendor?.name?.toLowerCase().includes(needle)
-    );
-  }
-
-  switch (sort) {
-    case "newest":
-      filtered = [...filtered].sort(
-        (a, b) => new Date(a.createdAt ?? 0).getTime() - new Date(b.createdAt ?? 0).getTime()
-      );
-      break;
-    case "price-asc":
-      filtered = [...filtered].sort((a, b) => a.priceCents - b.priceCents);
-      break;
-    case "price-desc":
-      filtered = [...filtered].sort((a, b) => b.priceCents - a.priceCents);
-      break;
-    default:
-      filtered = [...filtered].sort(
-        (a, b) =>
-          Number(b.featured) - Number(a.featured) ||
-          new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime()
-      );
-  }
+export default async function ShopPage() {
+  const products = (await getProducts()) || [];
 
   return (
-    <ShopView
-      products={filtered}
-      counts={counts}
-      q={q}
-      categories={categories}
-      sort={sort}
-      total={all.length}
-    />
+    <div className="bg-paper min-h-screen py-16 px-4 md:px-8">
+      <div className="mx-auto max-w-7xl">
+        <div className="border-b border-sand pb-8">
+          <p className="text-[10px] font-semibold tracking-[0.3em] uppercase text-taupe">Collection</p>
+          <h1 className="mt-2 font-display text-4xl text-ink md:text-5xl">All Products</h1>
+        </div>
+
+        <div className="mt-12 grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
+          {products.map((p) => (
+            <ProductCard key={p.id} product={p as any} />
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
