@@ -1,6 +1,4 @@
 import Link from "next/link";
-import { db } from "@/lib/db";
-import { ProductCard } from "@/components/ProductCard";
 import { Newsletter } from "@/components/Newsletter";
 import { IconArrow } from "@/components/Icons";
 
@@ -22,10 +20,7 @@ const STANDARDS = [
   ["Made to outlast", "Patterns cut for a decade of wear, with repairs offered for life."],
 ] as const;
 
-export default async function HomePage() {
-  const all = await db.select().from(db.products);
-  const featured = all.filter((p) => p.featured).slice(0, 4);
-
+export default function HomePage() {
   return (
     <>
       {/* Hero */}
@@ -75,7 +70,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Category Tiles */}
+      {/* Categories */}
       <section className="bg-sand/30 py-20 px-4 md:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="flex items-end justify-between border-b border-sand pb-6">
@@ -108,29 +103,6 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* Featured Products */}
-      {featured.length > 0 && (
-        <section className="bg-paper py-20 px-4 md:px-8">
-          <div className="mx-auto max-w-7xl">
-            <div className="flex items-end justify-between border-b border-sand pb-6">
-              <div>
-                <p className="text-[10px] font-semibold tracking-[0.3em] uppercase text-taupe">Curated Selection</p>
-                <h2 className="mt-2 font-display text-3xl text-ink md:text-4xl">Featured Pieces</h2>
-              </div>
-              <Link href="/shop" className="text-xs font-semibold uppercase tracking-[0.2em] text-ink hover:text-gold">
-                View All ({all.length})
-              </Link>
-            </div>
-
-            <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
-              {featured.map((p) => (
-                <ProductCard key={p.id} product={p as any} />
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
 
       <Newsletter />
     </>
