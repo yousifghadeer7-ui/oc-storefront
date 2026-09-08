@@ -10,8 +10,8 @@ export const CATEGORIES = [
 
 export type Category = (typeof CATEGORIES)[number];
 
-export const FREE_SHIPPING_THRESHOLD = 30000; // $300 in cents
-export const FLAT_SHIPPING = 1500; // $15
+export const FREE_SHIPPING_THRESHOLD = 30000;
+export const FLAT_SHIPPING = 1500;
 
 export function matchesCategory(
   productCategory: string | null | undefined,
@@ -19,14 +19,60 @@ export function matchesCategory(
   targetCategory: string
 ): boolean {
   if (!targetCategory) return true;
-
   const target = targetCategory.toLowerCase().trim();
+  if (productCategory && productCategory.toLowerCase().trim() === target) return true;
+  return productTags.some((tag) => tag.toLowerCase().trim() === target);
+}
 
-  if (productCategory && productCategory.toLowerCase().trim() === target) {
-    return true;
+export async function getProducts() {
+  try {
+    const res = await fetch("https://kw8nk1-ix.myshopify.com/api/2024-01/graphql.json", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Shopify-Storefront-Access-Token": "50af4161e6230c8bea6f3e4191448b33",
+      },
+      body: JSON.stringify({
+        query: `{
+          products(first: 50) {
+            edges {
+              node {
+                id
+                title
+                description
+                productType
+                tags
+                variants(first: 1) { edges { node { price { amount } } } }
+                images(first: 1) { edges { node { url } } }
+              }
+            }
+          }
+        }`
+      }),
+      next: { revalidate: 60 }
+    });
+
+    if (!res.ok) return [];
+
+    const json = await res.json();
+    const items = json?.data?.products?.edges || [];
+
+    return items.map((edge: any) => {
+      const p = edge.node;
+      return {
+        id: p.id.split("/").pop() || p.id,
+        name: p.title,
+        slug: p.title.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+        description: p.description || "",
+        category: p.productType || "Dresses",
+        tags: p.tags || [],
+        priceCents: Math.round(parseFloat(p.variants?.edges[0]?.node?.price?.amount || "0") * 100),
+        images: [p.images?.edges[0]?.node?.url || ""],
+        featured: true,
+      };
+    });
+  } catch (e) {
+    console.error("Shopify error:", e);
+    return [];
   }
-
-  return productTags.some(
-    (tag) => tag.toLowerCase().trim() === target
-  );
 }
