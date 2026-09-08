@@ -39,6 +39,7 @@ export async function getProducts() {
               node {
                 id
                 title
+                handle
                 description
                 productType
                 tags
@@ -62,13 +63,13 @@ export async function getProducts() {
       return {
         id: p.id.split("/").pop() || p.id,
         name: p.title,
-        slug: p.title.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+        handle: p.handle,
         description: p.description || "",
-        category: p.productType || "Dresses",
+        category: p.productType || "",
         tags: p.tags || [],
         priceCents: Math.round(parseFloat(p.variants?.edges[0]?.node?.price?.amount || "0") * 100),
         images: [p.images?.edges[0]?.node?.url || ""],
-        featured: true,
+        shopifyUrl: `https://kw8nk1-ix.myshopify.com/products/${p.handle}`
       };
     });
   } catch (e) {
