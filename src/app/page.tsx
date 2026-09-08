@@ -23,7 +23,8 @@ const STANDARDS = [
 export default function HomePage() {
   return (
     <>
-      <section className="relative h-[82vh] min-h-[540px] w-full overflow-hidden bg-ink">
+      {/* 1. Hero Section */}
+      <section className="relative h-[85vh] min-h-[580px] w-full overflow-hidden bg-ink">
         <img
           src={px(20231996, 1800, 1000)}
           alt="Model in a dark tailored coat"
@@ -55,7 +56,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="bg-ink border-b border-paper/10 py-12 text-paper">
+      {/* 2. Philosophy & Standards Section */}
+      <section className="bg-ink border-b border-paper/10 py-16 text-paper">
         <div className="mx-auto max-w-7xl px-4 md:px-8">
           <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
             {STANDARDS.map(([title, body]) => (
@@ -68,7 +70,37 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="bg-sand/30 py-20 px-4 md:px-8">
+      {/* 3. Story & Brand Highlight Section */}
+      <section className="bg-paper py-24 px-4 md:px-8 border-b border-sand">
+        <div className="mx-auto max-w-7xl grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+          <div className="space-y-6">
+            <p className="text-[10px] font-semibold tracking-[0.3em] uppercase text-taupe">Craftsmanship</p>
+            <h2 className="font-display text-4xl text-ink md:text-5xl leading-tight">
+              Designed for longevity, <br />
+              <span className="italic">tailored for distinction.</span>
+            </h2>
+            <p className="text-sm text-ink/70 leading-relaxed">
+              Every garment in our modern collection is shaped with architectural precision and built using sustainable textiles sourced directly from European mills.
+            </p>
+            <Link
+              href="/shop"
+              className="inline-block text-xs font-semibold uppercase tracking-[0.2em] border-b border-ink pb-1 text-ink hover:text-gold hover:border-gold transition"
+            >
+              Read Full Atelier Story &rarr;
+            </Link>
+          </div>
+          <div className="h-[450px] overflow-hidden bg-sand/30">
+            <img
+              src={px(10400030, 800, 1000)}
+              alt="Atelier craftsmanship detail"
+              className="h-full w-full object-cover"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* 4. Category Grid Section */}
+      <section className="bg-sand/30 py-24 px-4 md:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="flex items-end justify-between border-b border-sand pb-6">
             <div>
@@ -101,6 +133,7 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* 5. Newsletter Section */}
       <Newsletter />
     </>
   );
