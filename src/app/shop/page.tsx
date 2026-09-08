@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { db } from "@/db";
 import { products } from "@/db/schema";
 import { ShopView } from "@/components/ShopView";
+import { matchesCategory } from "@/lib/catalog";
 
 export const dynamic = "force-dynamic";
 
@@ -25,36 +26,46 @@ export default async function ShopPage({
   searchParams: Promise<SearchParams>;
 }) {
   const sp = await searchParams;
-  const q = (first(sp.q) ?? "").trim();
+
+  const q = first(sp.q)?.trim();
   const categories = (first(sp.category) ?? "")
     .split(",")
-    .map((c) => c.trim())
     .filter(Boolean);
   const sort = first(sp.sort) ?? "featured";
 
   const all = await db.select().from(products);
 
   const counts: Record<string, number> = {};
-  for (const p of all) counts[p.category] = (counts[p.category] ?? 0) + 1;
+  for (const p of all) {
+    if (p.category) {
+      counts[p.category] = (counts[p.category] ?? 0) + 1;
+    }
+  }
 
   let filtered = all;
-  if (categories.length)
-    filtered = filtered.filter((p) => categories.includes(p.category));
+
+  // استخدام دالة المطابقة المرنة للفلترة حسب الفئات المختارة
+  if (categories.length > 0) {
+    filtered = filtered.filter((p) =>
+      categories.some((cat) => matchesCategory(p.category, p.tags ?? [], cat))
+    );
+  }
+
   if (q) {
     const needle = q.toLowerCase();
     filtered = filtered.filter(
       (p) =>
         p.name.toLowerCase().includes(needle) ||
-        p.category.toLowerCase().includes(needle) ||
-        p.description.toLowerCase().includes(needle) ||
-        p.colors.some((c) => c.name.toLowerCase().includes(needle))
+        p.category?.toLowerCase().includes(needle) ||
+        p.description?.toLowerCase().includes(needle) ||
+        p.vendor?.name?.toLowerCase().includes(needle)
     );
   }
 
   switch (sort) {
-    case "new":
+    case "newest":
       filtered = [...filtered].sort(
-        (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
+        (a, b) => a.createdAt.getTime() - b.createdAt.getTime()
       );
       break;
     case "price-asc":
