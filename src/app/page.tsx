@@ -23,7 +23,6 @@ const STANDARDS = [
 export default function HomePage() {
   return (
     <>
-      {/* Hero */}
       <section className="relative h-[82vh] min-h-[540px] w-full overflow-hidden bg-ink">
         <img
           src={px(20231996, 1800, 1000)}
@@ -56,7 +55,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Philosophy */}
       <section className="bg-ink border-b border-paper/10 py-12 text-paper">
         <div className="mx-auto max-w-7xl px-4 md:px-8">
           <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
@@ -70,7 +68,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Categories */}
       <section className="bg-sand/30 py-20 px-4 md:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="flex items-end justify-between border-b border-sand pb-6">
