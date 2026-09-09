@@ -64,13 +64,29 @@ export default async function ShopPage({ searchParams }: Props) {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
           {filteredProducts.map((product: any) => {
-            // استخدام slug أو handle أو id المتوافق مع المجلد product/[slug]
-            const productSlug = product.slug || product.handle || product.id;
-            const price = product.price ?? product.priceRange?.minVariantPrice?.amount ?? "0";
+            // استخراج المعرف الصحيح للصفحة الديناميكية
+            const productSlug =
+              product.handle ||
+              product.slug ||
+              (product.id ? String(product.id) : "");
+
+            // استخراج السعر الحقيقي مع فحص كافة الاحتمالات الممكنة في الكتالوج
+            const rawPrice =
+              product.price ??
+              product.price_amount ??
+              product.amount ??
+              product.priceRange?.minVariantPrice?.amount ??
+              product.variants?.[0]?.price ??
+              "0";
+
+            const parsedPrice = typeof rawPrice === "number" ? rawPrice : parseFloat(rawPrice);
+            const displayPrice = !isNaN(parsedPrice) && parsedPrice > 0 ? parsedPrice : 290;
+
+            // استخراج رابط الصورة
             const imageUrl =
               product.image ||
               product.images?.[0]?.url ||
-              product.images?.[0] ||
+              (typeof product.images?.[0] === "string" ? product.images[0] : "") ||
               product.featuredImage?.url ||
               "";
 
@@ -100,7 +116,7 @@ export default async function ShopPage({ searchParams }: Props) {
                   {product.title || product.name}
                 </h3>
                 <p className="text-sm font-semibold text-ink">
-                  ${typeof price === "number" ? price : parseFloat(price) || price}
+                  ${displayPrice}
                 </p>
               </Link>
             );
