@@ -1,4 +1,4 @@
-import { ProductCard } from "@/components/ProductCard";
+import Image from "next/image";
 
 interface Props {
   searchParams: Promise<{ cat?: string; q?: string }>;
@@ -13,32 +13,9 @@ const sampleProducts = Array.from({ length: 44 }).map((_, i) => {
     id: `prod-${i + 1}`,
     title: `Classic Item ${i + 1}`,
     handle: `classic-item-${i + 1}`,
-    // حقول السعر بكافة التسميات الممكنة
-    price: "290",
-    regularPrice: "290",
-    originalPrice: "290",
-    value: 290,
-    cost: 290,
-    priceRange: {
-      minVariantPrice: {
-        amount: "290",
-        currencyCode: "USD",
-      },
-      maxVariantPrice: {
-        amount: "290",
-        currencyCode: "USD",
-      },
-    },
-    // حقول الصور
+    price: "$290",
     image: imageUrl,
-    images: [{ url: imageUrl, altText: "Product Image" }],
-    featuredImage: {
-      url: imageUrl,
-      altText: "Product Image",
-    },
     category: selectedCat,
-    productType: selectedCat,
-    tags: [selectedCat],
   };
 });
 
@@ -90,7 +67,20 @@ export default async function ShopPage({ searchParams }: Props) {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
           {filteredProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <div key={product.id} className="group cursor-pointer">
+              <div className="relative aspect-[3/4] w-full overflow-hidden bg-sand/20 mb-3">
+                <img
+                  src={product.image}
+                  alt={product.title}
+                  className="h-full w-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                />
+              </div>
+              <div className="text-[10px] tracking-widest uppercase text-taupe mb-1">
+                {product.category}
+              </div>
+              <h3 className="text-sm font-medium text-ink mb-1">{product.title}</h3>
+              <p className="text-sm font-semibold text-ink">{product.price}</p>
+            </div>
           ))}
         </div>
       )}
