@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCart } from "@/lib/cart";
 
 interface ProductCardProps {
@@ -17,6 +18,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     addItem({
       id: product.id,
       name: product.name,
@@ -27,7 +29,7 @@ export function ProductCard({ product }: ProductCardProps) {
   };
 
   return (
-    <div className="group relative block">
+    <Link href={`/product/${product.handle}`} className="group relative block">
       <div className="aspect-[3/4] w-full overflow-hidden bg-sand/30 relative">
         {product.images?.[0] ? (
           <img
@@ -42,7 +44,7 @@ export function ProductCard({ product }: ProductCardProps) {
         )}
         <button
           onClick={handleAddToCart}
-          className="absolute bottom-3 right-3 bg-ink text-paper text-[10px] px-3 py-2 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition hover:bg-gold hover:text-ink"
+          className="absolute bottom-3 right-3 bg-ink text-paper text-[10px] px-3 py-2 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition hover:bg-gold hover:text-ink z-10"
         >
           Add to Bag
         </button>
@@ -53,6 +55,6 @@ export function ProductCard({ product }: ProductCardProps) {
       <p className="mt-1 text-sm font-semibold text-gold">
         ${((product.priceCents || 0) / 100).toFixed(2)}
       </p>
-    </div>
+    </Link>
   );
 }
