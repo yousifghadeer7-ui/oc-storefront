@@ -10,6 +10,10 @@ export const CATEGORIES = [
 
 export type Category = (typeof CATEGORIES)[number];
 
+// المتغيرات التي يطلبها CartDrawer
+export const FREE_SHIPPING_THRESHOLD = 30000;
+export const FLAT_SHIPPING = 1500;
+
 export function matchesCategory(
   productCategory: string | null | undefined,
   productTags: string[] = [],
