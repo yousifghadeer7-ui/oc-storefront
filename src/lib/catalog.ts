@@ -2,16 +2,13 @@ export const CATEGORIES = [
   "Outerwear",
   "Tailoring",
   "Knitwear",
+  "Dresses",
   "Shirts",
   "Trousers",
-  "Dresses",
   "Accessories",
 ] as const;
 
 export type Category = (typeof CATEGORIES)[number];
-
-export const FREE_SHIPPING_THRESHOLD = 30000;
-export const FLAT_SHIPPING = 1500;
 
 export function matchesCategory(
   productCategory: string | null | undefined,
@@ -20,8 +17,11 @@ export function matchesCategory(
 ): boolean {
   if (!targetCategory) return true;
   const target = targetCategory.toLowerCase().trim();
-  if (productCategory && productCategory.toLowerCase().trim() === target) return true;
-  return productTags.some((tag) => tag.toLowerCase().trim() === target);
+  
+  const categoryMatch = productCategory ? productCategory.toLowerCase().trim().includes(target) : false;
+  const tagMatch = productTags.some((tag) => tag.toLowerCase().trim().includes(target));
+  
+  return categoryMatch || tagMatch;
 }
 
 export async function getProducts() {
@@ -34,7 +34,7 @@ export async function getProducts() {
       },
       body: JSON.stringify({
         query: `{
-          products(first: 50) {
+          products(first: 100) {
             edges {
               node {
                 id
@@ -50,7 +50,7 @@ export async function getProducts() {
           }
         }`
       }),
-      next: { revalidate: 60 }
+      next: { revalidate: 10 }
     });
 
     if (!res.ok) return [];
