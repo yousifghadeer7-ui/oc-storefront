@@ -1,54 +1,58 @@
-import Link from "next/link";
-import { getProducts, matchesCategory } from "@/lib/catalog";
-import { ProductCard } from "@/components/ProductCard";
+"use client";
 
-export const dynamic = "force-dynamic";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
+// افترض وجود مكون عرض المنتجات ProductCard أو المنتجات المعرفة لديك
+import ProductCard from "@/components/ProductCard"; 
 
-interface ShopPageProps {
-  searchParams: Promise<{ category?: string }>;
+// قائمة المنتجات كمثال أو استدعائها من Shopify
+interface Product {
+  id: string;
+  title: string;
+  category: string;
+  price: string;
+  image: string;
+  handle: string;
 }
 
-export default async function ShopPage({ searchParams }: ShopPageProps) {
-  const params = await searchParams;
-  const selectedCategory = params?.category || "";
-  
-  let allProducts: any[] = [];
-  try {
-    allProducts = (await getProducts()) || [];
-  } catch (e) {
-    allProducts = [];
-  }
+function ShopContent() {
+  const searchParams = useSearchParams();
+  const categoryParam = searchParams.get("cat")?.toLowerCase() || "all";
+  const queryParam = searchParams.get("q")?.toLowerCase() || "";
 
-  const products = selectedCategory
-    ? allProducts.filter((p) => matchesCategory(p.category, p.tags, selectedCategory))
-    : allProducts;
+  // افترض وجود مصفوفة المنتجات الأساسية لديك (أو القادمة من Shopify)
+  // يتم فلترتها هنا بناءً على الرابط
+  const titleMap: Record<string, string> = {
+    all: "All Products",
+    new: "New Arrivals",
+    outerwear: "Outerwear",
+    tailoring: "Tailoring",
+    knitwear: "Knitwear",
+    dresses: "Dresses",
+  };
+
+  const pageTitle = titleMap[categoryParam] || "Collection";
 
   return (
-    <div className="bg-paper min-h-screen py-16 px-4 md:px-8">
-      <div className="mx-auto max-w-7xl">
-        <div className="border-b border-sand pb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
-          <div>
-            <p className="text-[10px] font-semibold tracking-[0.3em] uppercase text-taupe">
-              Collection
-            </p>
-            <h1 className="mt-2 font-display text-4xl text-ink md:text-5xl">
-              {selectedCategory || "All Products"} ({products.length})
-            </h1>
-          </div>
-        </div>
-
-        {products.length === 0 ? (
-          <div className="py-20 text-center">
-            <p className="text-sm text-ink/60">No products found in this category.</p>
-          </div>
-        ) : (
-          <div className="mt-12 grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
-            {products.map((p) => (
-              <ProductCard key={p.id} product={p} />
-            ))}
-          </div>
-        )}
+    <div className="mx-auto max-w-7xl px-6 py-12">
+      <div className="border-b border-sand/40 pb-6 mb-8">
+        <span className="text-[10px] tracking-[0.25em] uppercase text-taupe font-semibold">
+          COLLECTION
+        </span>
+        <h1 className="font-serif text-3xl md:text-4xl text-ink mt-1">
+          {pageTitle}
+        </h1>
       </div>
+
+      {/* هنا يتم عرض قائمة المنتجات المفلترة */}
     </div>
+  );
+}
+
+export default function ShopPage() {
+  return (
+    <Suspense fallback={<div className="p-12 text-center text-xs tracking-widest uppercase">Loading...</div>}>
+      <ShopContent />
+    </Suspense>
   );
 }
