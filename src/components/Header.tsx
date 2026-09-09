@@ -44,30 +44,30 @@ export function Header() {
         </div>
       </div>
 
-      {/* Main Header */}
+      {/* Main Header with Exact 3-Column Grid */}
       <div className="border-b border-sand/30 bg-paper/95 backdrop-blur-md">
-        <div className="mx-auto flex h-24 max-w-7xl items-center justify-between px-6 md:px-12">
+        <div className="mx-auto grid grid-cols-3 h-24 max-w-7xl items-center px-4 md:px-8">
           
-          {/* Navigation Links (Larger Text) */}
-          <nav className="hidden lg:flex items-center gap-8 text-[13px] font-semibold tracking-[0.18em] uppercase text-ink">
-            <Link href="/shop?cat=new" className="hover:text-gold transition">NEW IN</Link>
-            <Link href="/shop" className="hover:text-gold transition">SHOP ALL</Link>
-            <Link href="/shop?cat=outerwear" className="hover:text-gold transition">OUTERWEAR</Link>
-            <Link href="/shop?cat=tailoring" className="hover:text-gold transition">TAILORING</Link>
-            <Link href="/shop?cat=knitwear" className="hover:text-gold transition">KNITWEAR</Link>
-            <Link href="/shop?cat=dresses" className="hover:text-gold transition">DRESSES</Link>
+          {/* Left Column: Navigation Links pushed to Far Left */}
+          <nav className="hidden lg:flex items-center gap-6 text-[12px] font-semibold tracking-[0.15em] uppercase text-ink justify-start">
+            <Link href="/shop?cat=new" className="hover:text-gold transition whitespace-nowrap">NEW IN</Link>
+            <Link href="/shop" className="hover:text-gold transition whitespace-nowrap">SHOP ALL</Link>
+            <Link href="/shop?cat=outerwear" className="hover:text-gold transition whitespace-nowrap">OUTERWEAR</Link>
+            <Link href="/shop?cat=tailoring" className="hover:text-gold transition whitespace-nowrap">TAILORING</Link>
+            <Link href="/shop?cat=knitwear" className="hover:text-gold transition whitespace-nowrap">KNITWEAR</Link>
+            <Link href="/shop?cat=dresses" className="hover:text-gold transition whitespace-nowrap">DRESSES</Link>
           </nav>
 
-          {/* Prominent Logo */}
-          <div className="flex-1 lg:flex-none text-center">
+          {/* Middle Column: Exactly Centered Logo */}
+          <div className="flex justify-center items-center">
             <Link href="/" className="inline-flex flex-col items-center group">
               <span className="font-serif text-4xl md:text-5xl tracking-tight text-ink group-hover:opacity-80 transition">OC</span>
               <span className="text-[9px] tracking-[0.35em] text-taupe uppercase mt-0.5 font-sans font-medium">SINCE 2026</span>
             </Link>
           </div>
 
-          {/* Right Action Icons (Slightly larger) */}
-          <div className="flex items-center gap-6">
+          {/* Right Column: Icons pushed to Far Right */}
+          <div className="flex items-center justify-end gap-6">
             <button 
               onClick={() => setSearchOpen(!searchOpen)} 
               aria-label="Search" 
