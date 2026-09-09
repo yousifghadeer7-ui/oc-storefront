@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { getProducts, matchesCategory } from "@/lib/catalog";
+import { ProductCard } from "@/components/ProductCard";
 
 export const dynamic = "force-dynamic";
 
@@ -42,36 +44,7 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
         ) : (
           <div className="mt-12 grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
             {products.map((p) => (
-              <a
-                key={p.id}
-                href={p.shopifyUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group block"
-              >
-                <div className="aspect-[3/4] w-full overflow-hidden bg-sand/30 relative">
-                  {p.images?.[0] ? (
-                    <img
-                      src={p.images[0]}
-                      alt={p.name}
-                      className="h-full w-full object-cover object-center transition duration-300 group-hover:scale-105"
-                    />
-                  ) : (
-                    <div className="h-full w-full bg-sand/50 flex items-center justify-center text-xs text-taupe">
-                      No Image
-                    </div>
-                  )}
-                  <div className="absolute bottom-3 right-3 bg-ink text-paper text-[10px] px-3 py-1 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition">
-                    Buy Now
-                  </div>
-                </div>
-                <h3 className="mt-4 font-display text-lg text-ink group-hover:text-gold transition">
-                  {p.name}
-                </h3>
-                <p className="mt-1 text-sm font-semibold text-gold">
-                  ${((p.priceCents || 0) / 100).toFixed(2)}
-                </p>
-              </a>
+              <ProductCard key={p.id} product={p} />
             ))}
           </div>
         )}
