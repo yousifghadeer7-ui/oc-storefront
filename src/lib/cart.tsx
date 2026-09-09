@@ -16,23 +16,27 @@ export interface CartItem {
 interface CartContextType {
   items: CartItem[];
   isOpen: boolean;
+  subtotal: number;
   openCart: () => void;
   closeCart: () => void;
   addItem: (item: Omit<CartItem, "quantity">) => void;
   removeItem: (id: string) => void;
   updateQuantity: (id: string, delta: number) => void;
   clearCart: () => void;
+  clear: () => void;
 }
 
 const CartContext = createContext<CartContextType>({
   items: [],
   isOpen: false,
+  subtotal: 0,
   openCart: () => {},
   closeCart: () => {},
   addItem: () => {},
   removeItem: () => {},
   updateQuantity: () => {},
   clearCart: () => {},
+  clear: () => {},
 });
 
 export const CartProvider = ({ children }: { children: React.ReactNode }) => {
@@ -51,6 +55,11 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     localStorage.setItem(cartKey, JSON.stringify(items));
   }, [items]);
+
+  const subtotal = items.reduce(
+    (sum, item) => sum + (item.priceCents || 0) * item.quantity,
+    0
+  );
 
   const openCart = () => setIsOpen(true);
   const closeCart = () => setIsOpen(false);
@@ -93,12 +102,14 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
       value={{
         items,
         isOpen,
+        subtotal,
         openCart,
         closeCart,
         addItem,
         removeItem,
         updateQuantity,
         clearCart,
+        clear: clearCart,
       }}
     >
       {children}
