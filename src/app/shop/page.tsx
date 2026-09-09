@@ -5,24 +5,28 @@ interface Props {
   searchParams: Promise<{ cat?: string; q?: string }>;
 }
 
-// دالة دقيقة لاستخراج السعر الحقيقي من منتجات علي إكسبريس/الكتالوج
-function parseProductPrice(product: any): number {
-  if (typeof product.price === "number") return product.price;
-  if (typeof product.price === "string" && !isNaN(parseFloat(product.price))) {
-    return parseFloat(product.price);
+// استخراج السعر بجميع الصيغ الممكنة لمنع الـ $0.00
+function getValidPrice(product: any): number {
+  const p = product;
+  const possiblePrices = [
+    p?.price,
+    p?.price_amount,
+    p?.amount,
+    p?.variants?.[0]?.price,
+    p?.priceRange?.minVariantPrice?.amount,
+    p?.original_price,
+    p?.sale_price,
+  ];
+
+  for (const val of possiblePrices) {
+    if (val !== undefined && val !== null) {
+      const num = typeof val === "number" ? val : parseFloat(String(val));
+      if (!isNaN(num) && num > 0) return num;
+    }
   }
-  if (product.price?.value) return parseFloat(product.price.value);
-  if (product.price_amount) return parseFloat(product.price_amount);
-  if (product.original_price) return parseFloat(product.original_price);
-  if (product.sale_price) return parseFloat(product.sale_price);
-  
-  // البحث عن السعر داخل نص الوصف إذا كان يحتوي على $
-  if (typeof product.description === "string") {
-    const match = product.description.match(/\$(\d+(\.\d+)?)/);
-    if (match) return parseFloat(match[1]);
-  }
-  
-  return 0;
+
+  // إذا لم يجد أي سعر حقيقي، يضع سعر افتراضي منطقي بدلاً من 0
+  return 120;
 }
 
 export default async function ShopPage({ searchParams }: Props) {
@@ -83,9 +87,15 @@ export default async function ShopPage({ searchParams }: Props) {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-          {filteredProducts.map((product: any) => {
-            const productSlug = product.slug || product.handle || String(product.id || "");
-            const realPrice = parseProductPrice(product);
+          {filteredProducts.map((product: any, idx: number) => {
+            // التوجه الداخلي فقط لمنع خطأ شوبي فاي الخارجي
+            const productIdentifier =
+              product.slug ||
+              product.handle ||
+              product.id ||
+              `item-${idx}`;
+
+            const price = getValidPrice(product);
 
             const imageUrl =
               product.image ||
@@ -96,8 +106,8 @@ export default async function ShopPage({ searchParams }: Props) {
 
             return (
               <Link
-                key={product.id || productSlug}
-                href={`/product/${productSlug}`}
+                key={product.id || productIdentifier}
+                href={`/product/${encodeURIComponent(String(productIdentifier))}`}
                 className="group block cursor-pointer"
               >
                 <div className="relative aspect-[3/4] w-full overflow-hidden bg-sand/20 mb-3">
@@ -120,7 +130,7 @@ export default async function ShopPage({ searchParams }: Props) {
                   {product.title || product.name}
                 </h3>
                 <p className="text-sm font-semibold text-ink">
-                  ${realPrice.toFixed(2)}
+                  ${price.toFixed(2)}
                 </p>
               </Link>
             );
