@@ -18,12 +18,15 @@ export default async function ShopPage({ searchParams }: Props) {
     console.error("Failed to load catalog products:", error);
   }
 
-  // ضبط صيغة السعر لتتوافق مع ProductCard وتمنع ظهور NaN
   const formattedProducts = productsList.map((product: any) => {
     const priceVal = product.price ?? product.priceRange?.minVariantPrice?.amount ?? "0";
+    // توحيد المعرفات والروابط لمنع أخطاء 404 عند النقر
+    const safeHandle = product.handle || product.slug || product.id;
     return {
       ...product,
-      price: typeof priceVal === "number" ? priceVal : parseFloat(priceVal) || 290,
+      handle: safeHandle,
+      slug: safeHandle,
+      price: typeof priceVal === "number" ? priceVal : parseFloat(priceVal) || 0,
       priceRange: {
         minVariantPrice: {
           amount: String(priceVal),
