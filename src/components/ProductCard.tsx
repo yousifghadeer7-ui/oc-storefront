@@ -1,60 +1,89 @@
 "use client";
 
 import Link from "next/link";
-import { useCart } from "@/lib/cart";
+import { formatMoney } from "@/lib/format";
+import { useWishlist } from "@/lib/wishlist";
+import { IconHeart } from "@/components/Icons";
 
-interface ProductCardProps {
-  product: {
-    id: string;
-    name: string;
-    priceCents: number;
-    images?: string[];
-    handle: string;
-  };
+export interface Product {
+  id: string | number;
+  handle?: string;
+  slug?: string;
+  name: string;
+  priceCents: number;
+  compareAtCents?: number | null;
+  category?: string;
+  description?: string;
+  image?: string;
+  images?: string[];
 }
 
-export function ProductCard({ product }: ProductCardProps) {
-  const addItem = useCart((state) => state.addItem);
+export function ProductCard({ product }: { product: Product }) {
+  const { items, addItem, removeItem } = useWishlist();
+  const productHandle = product.handle || product.slug || String(product.id);
+  const isSaved = items.some((i) => String(i.id) === String(product.id));
 
-  const handleAddToCart = (e: React.MouseEvent) => {
+  const imageUrl =
+    product.image ||
+    (product.images && product.images.length > 0 ? product.images[0] : "/placeholder.png");
+
+  const toggleWishlist = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    addItem({
-      id: product.id,
-      name: product.name,
-      priceCents: product.priceCents,
-      image: product.images?.[0] || "",
-      handle: product.handle,
-    });
+    if (isSaved) {
+      removeItem(String(product.id));
+    } else {
+      addItem({
+        id: String(product.id),
+        name: product.name,
+        priceCents: product.priceCents,
+        image: imageUrl,
+        handle: productHandle,
+      });
+    }
   };
 
   return (
-    <Link href={`/product/${product.handle}`} className="group relative block">
-      <div className="aspect-[3/4] w-full overflow-hidden bg-sand/30 relative">
-        {product.images?.[0] ? (
+    <div className="group relative flex flex-col">
+      <div className="relative aspect-[3/4] w-full overflow-hidden bg-sand/20">
+        <Link href={`/product/${productHandle}`}>
           <img
-            src={product.images[0]}
+            src={imageUrl}
             alt={product.name}
             className="h-full w-full object-cover object-center transition duration-300 group-hover:scale-105"
           />
-        ) : (
-          <div className="h-full w-full bg-sand/50 flex items-center justify-center text-xs text-taupe">
-            No Image
-          </div>
-        )}
+        </Link>
         <button
-          onClick={handleAddToCart}
-          className="absolute bottom-3 right-3 bg-ink text-paper text-[10px] px-3 py-2 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition hover:bg-gold hover:text-ink z-10"
+          onClick={toggleWishlist}
+          className="absolute top-3 right-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-paper/80 backdrop-blur transition hover:bg-paper"
         >
-          Add to Bag
+          <IconHeart
+            className={`h-4 w-4 ${
+              isSaved ? "fill-red-500 text-red-500" : "text-ink"
+            }`}
+          />
         </button>
       </div>
-      <h3 className="mt-4 font-display text-lg text-ink group-hover:text-gold transition">
-        {product.name}
-      </h3>
-      <p className="mt-1 text-sm font-semibold text-gold">
-        ${((product.priceCents || 0) / 100).toFixed(2)}
-      </p>
-    </Link>
+
+      <div className="mt-3 flex flex-col gap-1">
+        <span className="text-[10px] font-semibold tracking-widest uppercase text-taupe">
+          {product.category || "Collection"}
+        </span>
+        <Link
+          href={`/product/${productHandle}`}
+          className="font-display text-base text-ink hover:underline"
+        >
+          {product.name}
+        </Link>
+        <div className="flex items-center gap-2 text-xs font-semibold">
+          <span>{formatMoney(product.priceCents)}</span>
+          {product.compareAtCents && product.compareAtCents > product.priceCents && (
+            <span className="text-taupe line-through">
+              {formatMoney(product.compareAtCents)}
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
