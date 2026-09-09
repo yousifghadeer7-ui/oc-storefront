@@ -3,6 +3,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
+export const cartKey = "oc-shopping-cart";
+
 export interface CartItem {
   id: string;
   name: string;
@@ -65,7 +67,7 @@ export const useCart = create<CartStore>()(
       clearCart: () => set({ items: [] }),
     }),
     {
-      name: "oc-shopping-cart",
+      name: cartKey,
     }
   )
 );
