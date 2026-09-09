@@ -4,25 +4,20 @@ interface Props {
   searchParams: Promise<{ cat?: string; q?: string }>;
 }
 
-// إنشاء بيانات المنتجات الـ 44 مباشرة داخل الملف لتجنب أي أخطاء استيراد
 const sampleProducts = Array.from({ length: 44 }).map((_, i) => {
   const categories = ["outerwear", "tailoring", "knitwear", "dresses"];
   const selectedCat = categories[i % 4];
-  
+
   return {
     id: `prod-${i + 1}`,
     title: `Classic Item ${i + 1}`,
     handle: `classic-item-${i + 1}`,
-    price: 290,
+    price: "$290",
     priceRange: {
       minVariantPrice: {
-        amount: "290.0",
+        amount: "290",
         currencyCode: "USD",
       },
-    },
-    featuredImage: {
-      url: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80",
-      altText: "Product Image",
     },
     images: [
       {
@@ -30,6 +25,10 @@ const sampleProducts = Array.from({ length: 44 }).map((_, i) => {
         altText: "Product Image",
       },
     ],
+    featuredImage: {
+      url: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80",
+      altText: "Product Image",
+    },
     category: selectedCat,
     productType: selectedCat,
     tags: [selectedCat],
