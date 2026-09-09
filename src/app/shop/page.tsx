@@ -1,36 +1,27 @@
-import Image from "next/image";
+import { ProductCard } from "@/components/ProductCard";
+import { products } from "@/lib/catalog";
 
 interface Props {
   searchParams: Promise<{ cat?: string; q?: string }>;
 }
-
-const sampleProducts = Array.from({ length: 44 }).map((_, i) => {
-  const categories = ["outerwear", "tailoring", "knitwear", "dresses"];
-  const selectedCat = categories[i % 4];
-  const imageUrl = "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80";
-
-  return {
-    id: `prod-${i + 1}`,
-    title: `Classic Item ${i + 1}`,
-    handle: `classic-item-${i + 1}`,
-    price: "$290",
-    image: imageUrl,
-    category: selectedCat,
-  };
-});
 
 export default async function ShopPage({ searchParams }: Props) {
   const params = await searchParams;
   const categoryParam = params.cat?.toLowerCase() || "all";
   const queryParam = params.q?.toLowerCase() || "";
 
-  const filteredProducts = sampleProducts.filter((product) => {
+  const productsList = Array.isArray(products) ? products : [];
+
+  const filteredProducts = productsList.filter((product: any) => {
     if (categoryParam !== "all" && categoryParam !== "new") {
-      const pCat = product.category.toLowerCase();
-      if (!pCat.includes(categoryParam)) return false;
+      const pCat = (product.category || product.productType || "").toLowerCase();
+      const tags = Array.isArray(product.tags)
+        ? product.tags.join(" ").toLowerCase()
+        : (product.tags || "").toLowerCase();
+      if (!pCat.includes(categoryParam) && !tags.includes(categoryParam)) return false;
     }
     if (queryParam) {
-      const title = product.title.toLowerCase();
+      const title = (product.title || product.name || "").toLowerCase();
       if (!title.includes(queryParam)) return false;
     }
     return true;
@@ -66,21 +57,8 @@ export default async function ShopPage({ searchParams }: Props) {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-          {filteredProducts.map((product) => (
-            <div key={product.id} className="group cursor-pointer">
-              <div className="relative aspect-[3/4] w-full overflow-hidden bg-sand/20 mb-3">
-                <img
-                  src={product.image}
-                  alt={product.title}
-                  className="h-full w-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
-                />
-              </div>
-              <div className="text-[10px] tracking-widest uppercase text-taupe mb-1">
-                {product.category}
-              </div>
-              <h3 className="text-sm font-medium text-ink mb-1">{product.title}</h3>
-              <p className="text-sm font-semibold text-ink">{product.price}</p>
-            </div>
+          {filteredProducts.map((product: any) => (
+            <ProductCard key={product.id || product.handle} product={product} />
           ))}
         </div>
       )}
