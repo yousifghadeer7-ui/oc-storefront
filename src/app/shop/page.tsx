@@ -1,27 +1,48 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
-// افترض وجود مكون عرض المنتجات ProductCard أو المنتجات المعرفة لديك
-import ProductCard from "@/components/ProductCard"; 
-
-// قائمة المنتجات كمثال أو استدعائها من Shopify
-interface Product {
-  id: string;
-  title: string;
-  category: string;
-  price: string;
-  image: string;
-  handle: string;
-}
+import { Suspense, useEffect, useState } from "react";
+import ProductCard from "@/components/ProductCard";
+// إذا كانت المنتجات تأتي من ملف محلي استدعها هنا، أو استخدم دالة Shopify الخاص بك
+import { getProducts } from "@/lib/shopify"; 
 
 function ShopContent() {
   const searchParams = useSearchParams();
   const categoryParam = searchParams.get("cat")?.toLowerCase() || "all";
   const queryParam = searchParams.get("q")?.toLowerCase() || "";
 
-  // افترض وجود مصفوفة المنتجات الأساسية لديك (أو القادمة من Shopify)
-  // يتم فلترتها هنا بناءً على الرابط
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadProducts() {
+      setLoading(true);
+      try {
+        // جلب المنتجات الأساسية
+        const data = await getProducts();
+        setProducts(data || []);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadProducts();
+  }, []);
+
+  // فلترة المنتجات بناءً على الخيار المحدد في الهيدر
+  const filteredProducts = products.filter((product) => {
+    if (categoryParam !== "all" && categoryParam !== "new") {
+      const pCat = (product.category || product.productType || "").toLowerCase();
+      if (!pCat.includes(categoryParam)) return false;
+    }
+    if (queryParam) {
+      const title = (product.title || "").toLowerCase();
+      if (!title.includes(queryParam)) return false;
+    }
+    return true;
+  });
+
   const titleMap: Record<string, string> = {
     all: "All Products",
     new: "New Arrivals",
@@ -35,16 +56,32 @@ function ShopContent() {
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-12">
-      <div className="border-b border-sand/40 pb-6 mb-8">
-        <span className="text-[10px] tracking-[0.25em] uppercase text-taupe font-semibold">
-          COLLECTION
-        </span>
-        <h1 className="font-serif text-3xl md:text-4xl text-ink mt-1">
-          {pageTitle}
-        </h1>
+      <div className="border-b border-sand/40 pb-6 mb-8 flex justify-between items-end">
+        <div>
+          <span className="text-[10px] tracking-[0.25em] uppercase text-taupe font-semibold">
+            COLLECTION
+          </span>
+          <h1 className="font-serif text-3xl md:text-4xl text-ink mt-1">
+            {pageTitle} ({filteredProducts.length})
+          </h1>
+        </div>
       </div>
 
-      {/* هنا يتم عرض قائمة المنتجات المفلترة */}
+      {loading ? (
+        <div className="py-20 text-center text-xs uppercase tracking-widest text-taupe">
+          Loading products...
+        </div>
+      ) : filteredProducts.length === 0 ? (
+        <div className="py-20 text-center text-sm text-taupe">
+          No products found in this collection.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+          {filteredProducts.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
