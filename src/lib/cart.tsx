@@ -21,6 +21,7 @@ interface CartContextType {
   items: CartItem[];
   isOpen: boolean;
   subtotal: number;
+  count: number;
   openCart: () => void;
   closeCart: () => void;
   addItem: (item: Omit<CartItem, "quantity"> & { quantity?: number }) => void;
@@ -34,6 +35,7 @@ const CartContext = createContext<CartContextType>({
   items: [],
   isOpen: false,
   subtotal: 0,
+  count: 0,
   openCart: () => {},
   closeCart: () => {},
   addItem: () => {},
@@ -69,6 +71,11 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
 
   const subtotal = items.reduce(
     (sum, item) => sum + (item.priceCents || 0) * (item.quantity || item.qty || 1),
+    0
+  );
+
+  const count = items.reduce(
+    (total, item) => total + (item.quantity || item.qty || 1),
     0
   );
 
@@ -129,6 +136,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
         items,
         isOpen,
         subtotal,
+        count,
         openCart,
         closeCart,
         addItem,
