@@ -9,7 +9,6 @@ import { useWishlist } from "@/lib/wishlist";
 export function Header() {
   const { count = 0, openCart } = useCart();
   const { ids = [], items = [] } = useWishlist();
-  const pathname = usePathname();
   const [searchOpen, setSearchOpen] = useState(false);
 
   const wishlistCount = ids.length || items.length || 0;
@@ -24,7 +23,7 @@ export function Header() {
 
   return (
     <header className="w-full bg-paper sticky top-0 z-50">
-      {/* Top Ticker Bar with Continuous Animation */}
+      {/* Top Ticker Bar */}
       <div className="bg-ink text-paper text-[11px] tracking-[0.2em] uppercase py-2 overflow-hidden whitespace-nowrap border-b border-sand/20 relative flex">
         <div className="animate-marquee flex gap-8 items-center shrink-0 min-w-full justify-around">
           {tickerItems.map((item, idx) => (
@@ -44,12 +43,12 @@ export function Header() {
         </div>
       </div>
 
-      {/* Main Header with Exact 3-Column Grid */}
+      {/* Main Header */}
       <div className="border-b border-sand/30 bg-paper/95 backdrop-blur-md">
-        <div className="mx-auto grid grid-cols-3 h-24 max-w-7xl items-center px-4 md:px-8">
+        <div className="w-full grid grid-cols-3 h-24 items-center px-8 md:px-12">
           
-          {/* Left Column: Navigation Links pushed to Far Left */}
-          <nav className="hidden lg:flex items-center gap-6 text-[12px] font-semibold tracking-[0.15em] uppercase text-ink justify-start">
+          {/* Left Column */}
+          <nav className="hidden lg:flex items-center gap-8 text-[12px] font-semibold tracking-[0.18em] uppercase text-ink justify-start">
             <Link href="/shop?cat=new" className="hover:text-gold transition whitespace-nowrap">NEW IN</Link>
             <Link href="/shop" className="hover:text-gold transition whitespace-nowrap">SHOP ALL</Link>
             <Link href="/shop?cat=outerwear" className="hover:text-gold transition whitespace-nowrap">OUTERWEAR</Link>
@@ -58,7 +57,7 @@ export function Header() {
             <Link href="/shop?cat=dresses" className="hover:text-gold transition whitespace-nowrap">DRESSES</Link>
           </nav>
 
-          {/* Middle Column: Exactly Centered Logo */}
+          {/* Middle Column */}
           <div className="flex justify-center items-center">
             <Link href="/" className="inline-flex flex-col items-center group">
               <span className="font-serif text-4xl md:text-5xl tracking-tight text-ink group-hover:opacity-80 transition">OC</span>
@@ -66,7 +65,7 @@ export function Header() {
             </Link>
           </div>
 
-          {/* Right Column: Icons pushed to Far Right */}
+          {/* Right Column */}
           <div className="flex items-center justify-end gap-6">
             <button 
               onClick={() => setSearchOpen(!searchOpen)} 
