@@ -7,26 +7,26 @@ interface Props {
 const sampleProducts = Array.from({ length: 44 }).map((_, i) => {
   const categories = ["outerwear", "tailoring", "knitwear", "dresses"];
   const selectedCat = categories[i % 4];
+  const imageUrl = "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80";
 
   return {
     id: `prod-${i + 1}`,
     title: `Classic Item ${i + 1}`,
     handle: `classic-item-${i + 1}`,
-    price: "$290",
+    // توفير السعر بجميع الأشكال الممكنة لتجنب NaN
+    price: 290,
+    amount: 290,
     priceRange: {
       minVariantPrice: {
         amount: "290",
         currencyCode: "USD",
       },
     },
-    images: [
-      {
-        url: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80",
-        altText: "Product Image",
-      },
-    ],
+    // توفير الصور بجميع الصيغ المتوقعة
+    image: imageUrl,
+    images: [imageUrl, { url: imageUrl, altText: "Product Image" }],
     featuredImage: {
-      url: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80",
+      url: imageUrl,
       altText: "Product Image",
     },
     category: selectedCat,
