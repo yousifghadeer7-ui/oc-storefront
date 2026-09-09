@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { formatMoney } from "@/lib/format";
 import { useWishlist } from "@/lib/wishlist";
 import { IconHeart } from "@/components/Icons";
 
@@ -17,6 +16,10 @@ export interface Product {
   image?: string;
   images?: string[];
 }
+
+const formatPrice = (cents: number) => {
+  return `$${(cents / 100).toFixed(2)}`;
+};
 
 export function ProductCard({ product }: { product: Product }) {
   const { items, addItem, removeItem } = useWishlist();
@@ -76,10 +79,10 @@ export function ProductCard({ product }: { product: Product }) {
           {product.name}
         </Link>
         <div className="flex items-center gap-2 text-xs font-semibold">
-          <span>{formatMoney(product.priceCents)}</span>
+          <span>{formatPrice(product.priceCents)}</span>
           {product.compareAtCents && product.compareAtCents > product.priceCents && (
             <span className="text-taupe line-through">
-              {formatMoney(product.compareAtCents)}
+              {formatPrice(product.compareAtCents)}
             </span>
           )}
         </div>
