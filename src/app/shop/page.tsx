@@ -3,7 +3,6 @@
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { ProductCard } from "@/components/ProductCard";
-import { getProducts } from "@/lib/shopify";
 
 function ShopContent() {
   const searchParams = useSearchParams();
@@ -17,10 +16,13 @@ function ShopContent() {
     async function loadProducts() {
       setLoading(true);
       try {
-        const data = await getProducts();
-        setProducts(data || []);
+        const res = await fetch("/api/products");
+        if (res.ok) {
+          const data = await res.json();
+          setProducts(Array.isArray(data) ? data : data.products || []);
+        }
       } catch (e) {
-        console.error("Error fetching products:", e);
+        console.error("Fetch error:", e);
       } finally {
         setLoading(false);
       }
