@@ -1,36 +1,62 @@
-import { notFound } from "next/navigation";
+"use client";
+
+import { use } from "react";
+import { useEffect, useState } from "react";
 import { getProducts } from "@/lib/catalog";
+import { useCart } from "@/lib/cart";
 
 interface Props {
   params: Promise<{ slug: string }>;
 }
 
-export default async function ProductDetailPage({ params }: Props) {
-  const { slug } = await params;
-  
-  let productsList: any[] = [];
-  try {
-    const data = await getProducts();
-    productsList = Array.isArray(data) ? data : data?.products || [];
-  } catch (error) {
-    console.error("Failed to load catalog product:", error);
+export default function ProductDetailPage({ params }: Props) {
+  const resolvedParams = use(params);
+  const { addItem } = useCart();
+  const [product, setProduct] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [added, setAdded] = useState(false);
+
+  useEffect(() => {
+    async function fetchProduct() {
+      try {
+        const data = await getProducts();
+        const productsList = Array.isArray(data) ? data : data?.products || [];
+        
+        const found = productsList.find((p: any) => {
+          const pSlug = String(p.slug || "").toLowerCase();
+          const pHandle = String(p.handle || "").toLowerCase();
+          const pId = String(p.id || "").toLowerCase();
+          const target = String(resolvedParams.slug || "").toLowerCase();
+
+          return pSlug === target || pHandle === target || pId === target;
+        });
+
+        setProduct(found || null);
+      } catch (error) {
+        console.error("Failed to load product:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchProduct();
+  }, [resolvedParams.slug]);
+
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-7xl px-6 py-20 text-center text-sm text-taupe">
+        Loading product details...
+      </div>
+    );
   }
-
-  // البحث بالـ slug أو handle أو id لتجنب الـ 404
-  const product = productsList.find((p: any) => {
-    const pSlug = String(p.slug || "").toLowerCase();
-    const pHandle = String(p.handle || "").toLowerCase();
-    const pId = String(p.id || "").toLowerCase();
-    const target = String(slug || "").toLowerCase();
-
-    return pSlug === target || pHandle === target || pId === target;
-  });
 
   if (!product) {
-    notFound();
+    return (
+      <div className="mx-auto max-w-7xl px-6 py-20 text-center text-sm text-taupe">
+        Product not found.
+      </div>
+    );
   }
 
-  // معالجة السعر والصورة لضمان عدم وجود أخطاء
   const rawPrice =
     product.price ??
     product.price_amount ??
@@ -46,6 +72,18 @@ export default async function ProductDetailPage({ params }: Props) {
     (typeof product.images?.[0] === "string" ? product.images[0] : "") ||
     product.featuredImage?.url ||
     "";
+
+  const handleAddToCart = () => {
+    addItem({
+      id: product.id || product.handle || resolvedParams.slug,
+      title: product.title || product.name || "Product",
+      price: displayPrice,
+      image: imageUrl,
+      quantity: 1,
+    });
+    setAdded(true);
+    setTimeout(() => setAdded(false), 2000);
+  };
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-12">
@@ -72,13 +110,16 @@ export default async function ProductDetailPage({ params }: Props) {
             {product.title || product.name}
           </h1>
           <p className="text-2xl font-semibold text-ink">${displayPrice}</p>
-          
-          <p className="text-sm text-taupe leading-relaxed">
+
+          <p className="text-xs text-taupe leading-relaxed border-t border-b border-sand/40 py-4">
             {product.description || "High quality luxury apparel crafted with premium materials."}
           </p>
 
-          <button className="w-full py-4 bg-ink text-white font-medium hover:bg-ink/90 transition">
-            Add to Bag
+          <button
+            onClick={handleAddToCart}
+            className="w-full py-4 bg-ink text-white font-medium hover:bg-ink/90 transition active:scale-[0.99]"
+          >
+            {added ? "Added to Bag ✓" : "Add to Bag"}
           </button>
         </div>
       </div>
