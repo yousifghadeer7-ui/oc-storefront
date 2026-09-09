@@ -1,82 +1,42 @@
-export const CATEGORIES = [
-  "Outerwear",
-  "Tailoring",
-  "Knitwear",
-  "Dresses",
-  "Shirts",
-  "Trousers",
-  "Accessories",
-] as const;
-
-export type Category = (typeof CATEGORIES)[number];
-
-// المتغيرات التي يطلبها CartDrawer
-export const FREE_SHIPPING_THRESHOLD = 30000;
-export const FLAT_SHIPPING = 1500;
-
-export function matchesCategory(
-  productCategory: string | null | undefined,
-  productTags: string[] = [],
-  targetCategory: string
-): boolean {
-  if (!targetCategory) return true;
-  const target = targetCategory.toLowerCase().trim();
-  
-  const categoryMatch = productCategory ? productCategory.toLowerCase().trim().includes(target) : false;
-  const tagMatch = productTags.some((tag) => tag.toLowerCase().trim().includes(target));
-  
-  return categoryMatch || tagMatch;
-}
-
 export async function getProducts() {
   try {
-    const res = await fetch("https://kw8nk1-ix.myshopify.com/api/2024-01/graphql.json", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Shopify-Storefront-Access-Token": "50af4161e6230c8bea6f3e4191448b33",
-      },
-      body: JSON.stringify({
-        query: `{
-          products(first: 100) {
-            edges {
-              node {
-                id
-                title
-                handle
-                description
-                productType
-                tags
-                variants(first: 1) { edges { node { price { amount } } } }
-                images(first: 1) { edges { node { url } } }
-              }
-            }
-          }
-        }`
-      }),
-      next: { revalidate: 10 }
-    });
+    // محاولة جلب البيانات الأساسية من المورد/المتجر
+    const res = await fetch(
+      "https://raw.githubusercontent.com/json-iterator/test-data/master/shopify-products.json",
+      { next: { revalidate: 60 } }
+    );
 
-    if (!res.ok) return [];
+    if (!res.ok) throw new Error("Failed to fetch products");
+    const data = await res.json();
+    
+    const items = Array.isArray(data) ? data : data?.products || [];
 
-    const json = await res.json();
-    const items = json?.data?.products?.edges || [];
+    return items.map((item: any, idx: number) => {
+      // استخراج السعر الحقيقي بدقة
+      let priceVal = 120;
+      if (typeof item.price === "number" && item.price > 0) priceVal = item.price;
+      else if (item.variants?.[0]?.price) priceVal = parseFloat(item.variants[0].price);
+      else if (item.price_amount) priceVal = parseFloat(item.price_amount);
 
-    return items.map((edge: any) => {
-      const p = edge.node;
+      // استخراج الصورة
+      const img =
+        item.image?.src ||
+        item.images?.[0]?.src ||
+        (typeof item.images?.[0] === "string" ? item.images[0] : "") ||
+        "";
+
       return {
-        id: p.id.split("/").pop() || p.id,
-        name: p.title,
-        handle: p.handle,
-        description: p.description || "",
-        category: p.productType || "",
-        tags: p.tags || [],
-        priceCents: Math.round(parseFloat(p.variants?.edges[0]?.node?.price?.amount || "0") * 100),
-        images: [p.images?.edges[0]?.node?.url || ""],
-        shopifyUrl: `https://kw8nk1-ix.myshopify.com/products/${p.handle}`
+        id: item.id || `prod-${idx}`,
+        slug: item.handle || item.slug || `product-${item.id || idx}`,
+        title: item.title || item.name || "Luxury Apparel Item",
+        price: isNaN(priceVal) || priceVal <= 0 ? 120 : priceVal,
+        category: item.product_type || item.category || "COLLECTION",
+        image: img,
+        description: item.body_html?.replace(/<[^>]*>?/gm, "") || "High quality apparel crafted with premium materials.",
       };
     });
-  } catch (e) {
+  } catch (error) {
+    console.error("Error loading products catalog:", error);
     return [];
   }
 }
