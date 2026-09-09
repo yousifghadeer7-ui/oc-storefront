@@ -1,5 +1,5 @@
 import { ProductCard } from "@/components/ProductCard";
-import { products } from "@/lib/catalog";
+import { getProducts } from "@/lib/catalog";
 
 interface Props {
   searchParams: Promise<{ cat?: string; q?: string }>;
@@ -10,9 +10,30 @@ export default async function ShopPage({ searchParams }: Props) {
   const categoryParam = params.cat?.toLowerCase() || "all";
   const queryParam = params.q?.toLowerCase() || "";
 
-  const productsList = Array.isArray(products) ? products : [];
+  let productsList: any[] = [];
+  try {
+    const data = await getProducts();
+    productsList = Array.isArray(data) ? data : data?.products || [];
+  } catch (error) {
+    console.error("Failed to load catalog products:", error);
+  }
 
-  const filteredProducts = productsList.filter((product: any) => {
+  // ضبط صيغة السعر لتتوافق مع ProductCard وتمنع ظهور NaN
+  const formattedProducts = productsList.map((product: any) => {
+    const priceVal = product.price ?? product.priceRange?.minVariantPrice?.amount ?? "0";
+    return {
+      ...product,
+      price: typeof priceVal === "number" ? priceVal : parseFloat(priceVal) || 290,
+      priceRange: {
+        minVariantPrice: {
+          amount: String(priceVal),
+          currencyCode: "USD",
+        },
+      },
+    };
+  });
+
+  const filteredProducts = formattedProducts.filter((product: any) => {
     if (categoryParam !== "all" && categoryParam !== "new") {
       const pCat = (product.category || product.productType || "").toLowerCase();
       const tags = Array.isArray(product.tags)
