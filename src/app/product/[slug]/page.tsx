@@ -9,6 +9,24 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
+function parseProductPrice(product: any): number {
+  if (typeof product.price === "number") return product.price;
+  if (typeof product.price === "string" && !isNaN(parseFloat(product.price))) {
+    return parseFloat(product.price);
+  }
+  if (product.price?.value) return parseFloat(product.price.value);
+  if (product.price_amount) return parseFloat(product.price_amount);
+  if (product.original_price) return parseFloat(product.original_price);
+  if (product.sale_price) return parseFloat(product.sale_price);
+  
+  if (typeof product.description === "string") {
+    const match = product.description.match(/\$(\d+(\.\d+)?)/);
+    if (match) return parseFloat(match[1]);
+  }
+  
+  return 0;
+}
+
 export default function ProductDetailPage({ params }: Props) {
   const resolvedParams = use(params);
   const { addItem } = useCart();
@@ -22,11 +40,11 @@ export default function ProductDetailPage({ params }: Props) {
         const data = await getProducts();
         const productsList = Array.isArray(data) ? data : data?.products || [];
         
+        const target = String(resolvedParams.slug || "").toLowerCase();
         const found = productsList.find((p: any) => {
           const pSlug = String(p.slug || "").toLowerCase();
           const pHandle = String(p.handle || "").toLowerCase();
           const pId = String(p.id || "").toLowerCase();
-          const target = String(resolvedParams.slug || "").toLowerCase();
 
           return pSlug === target || pHandle === target || pId === target;
         });
@@ -57,14 +75,7 @@ export default function ProductDetailPage({ params }: Props) {
     );
   }
 
-  const rawPrice =
-    product.price ??
-    product.price_amount ??
-    product.amount ??
-    product.priceRange?.minVariantPrice?.amount ??
-    "290";
-  const parsedPrice = typeof rawPrice === "number" ? rawPrice : parseFloat(rawPrice);
-  const displayPrice = !isNaN(parsedPrice) && parsedPrice > 0 ? parsedPrice : 290;
+  const realPrice = parseProductPrice(product);
 
   const imageUrl =
     product.image ||
@@ -77,7 +88,7 @@ export default function ProductDetailPage({ params }: Props) {
     addItem({
       id: product.id || product.handle || resolvedParams.slug,
       title: product.title || product.name || "Product",
-      price: displayPrice,
+      price: realPrice,
       image: imageUrl,
       quantity: 1,
     });
@@ -109,7 +120,7 @@ export default function ProductDetailPage({ params }: Props) {
           <h1 className="font-serif text-3xl md:text-4xl text-ink">
             {product.title || product.name}
           </h1>
-          <p className="text-2xl font-semibold text-ink">${displayPrice}</p>
+          <p className="text-2xl font-semibold text-ink">${realPrice.toFixed(2)}</p>
 
           <p className="text-xs text-taupe leading-relaxed border-t border-b border-sand/40 py-4">
             {product.description || "High quality luxury apparel crafted with premium materials."}
