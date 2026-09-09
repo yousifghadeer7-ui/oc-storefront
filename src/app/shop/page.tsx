@@ -5,6 +5,26 @@ interface Props {
   searchParams: Promise<{ cat?: string; q?: string }>;
 }
 
+// دالة دقيقة لاستخراج السعر الحقيقي من منتجات علي إكسبريس/الكتالوج
+function parseProductPrice(product: any): number {
+  if (typeof product.price === "number") return product.price;
+  if (typeof product.price === "string" && !isNaN(parseFloat(product.price))) {
+    return parseFloat(product.price);
+  }
+  if (product.price?.value) return parseFloat(product.price.value);
+  if (product.price_amount) return parseFloat(product.price_amount);
+  if (product.original_price) return parseFloat(product.original_price);
+  if (product.sale_price) return parseFloat(product.sale_price);
+  
+  // البحث عن السعر داخل نص الوصف إذا كان يحتوي على $
+  if (typeof product.description === "string") {
+    const match = product.description.match(/\$(\d+(\.\d+)?)/);
+    if (match) return parseFloat(match[1]);
+  }
+  
+  return 0;
+}
+
 export default async function ShopPage({ searchParams }: Props) {
   const params = await searchParams;
   const categoryParam = params.cat?.toLowerCase() || "all";
@@ -64,25 +84,9 @@ export default async function ShopPage({ searchParams }: Props) {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
           {filteredProducts.map((product: any) => {
-            // استخراج المعرف الصحيح للصفحة الديناميكية
-            const productSlug =
-              product.handle ||
-              product.slug ||
-              (product.id ? String(product.id) : "");
+            const productSlug = product.slug || product.handle || String(product.id || "");
+            const realPrice = parseProductPrice(product);
 
-            // استخراج السعر الحقيقي مع فحص كافة الاحتمالات الممكنة في الكتالوج
-            const rawPrice =
-              product.price ??
-              product.price_amount ??
-              product.amount ??
-              product.priceRange?.minVariantPrice?.amount ??
-              product.variants?.[0]?.price ??
-              "0";
-
-            const parsedPrice = typeof rawPrice === "number" ? rawPrice : parseFloat(rawPrice);
-            const displayPrice = !isNaN(parsedPrice) && parsedPrice > 0 ? parsedPrice : 290;
-
-            // استخراج رابط الصورة
             const imageUrl =
               product.image ||
               product.images?.[0]?.url ||
@@ -116,7 +120,7 @@ export default async function ShopPage({ searchParams }: Props) {
                   {product.title || product.name}
                 </h3>
                 <p className="text-sm font-semibold text-ink">
-                  ${displayPrice}
+                  ${realPrice.toFixed(2)}
                 </p>
               </Link>
             );
