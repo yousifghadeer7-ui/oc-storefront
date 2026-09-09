@@ -1,6 +1,6 @@
 "use client";
 
-import { create } from "zustand";
+import React, { createContext, useContext, useState, useEffect } from "react";
 
 export const cartKey = "oc-shopping-cart";
 
@@ -13,7 +13,7 @@ export interface CartItem {
   handle: string;
 }
 
-interface CartStore {
+interface CartContextType {
   items: CartItem[];
   isOpen: boolean;
   openCart: () => void;
@@ -24,34 +24,57 @@ interface CartStore {
   clearCart: () => void;
 }
 
-export const useCart = create<CartStore>((set) => ({
+const CartContext = createContext<CartContextType>({
   items: [],
   isOpen: false,
-  openCart: () => set({ isOpen: true }),
-  closeCart: () => set({ isOpen: false }),
-  addItem: (newItem) =>
-    set((state) => {
-      const existing = state.items.find((i) => i.id === newItem.id);
+  openCart: () => {},
+  closeCart: () => {},
+  addItem: () => {},
+  removeItem: () => {},
+  updateQuantity: () => {},
+  clearCart: () => {},
+});
+
+export const CartProvider = ({ children }: { children: React.ReactNode }) => {
+  const [items, setItems] = useState<CartItem[]>([]);
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem(cartKey);
+    if (saved) {
+      try {
+        setItems(JSON.parse(saved));
+      } catch (e) {}
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem(cartKey, JSON.stringify(items));
+  }, [items]);
+
+  const openCart = () => setIsOpen(true);
+  const closeCart = () => setIsOpen(false);
+
+  const addItem = (newItem: Omit<CartItem, "quantity">) => {
+    setItems((prev) => {
+      const existing = prev.find((i) => i.id === newItem.id);
       if (existing) {
-        return {
-          isOpen: true,
-          items: state.items.map((i) =>
-            i.id === newItem.id ? { ...i, quantity: i.quantity + 1 } : i
-          ),
-        };
+        return prev.map((i) =>
+          i.id === newItem.id ? { ...i, quantity: i.quantity + 1 } : i
+        );
       }
-      return {
-        isOpen: true,
-        items: [...state.items, { ...newItem, quantity: 1 }],
-      };
-    }),
-  removeItem: (id) =>
-    set((state) => ({
-      items: state.items.filter((i) => i.id !== id),
-    })),
-  updateQuantity: (id, delta) =>
-    set((state) => ({
-      items: state.items
+      return [...prev, { ...newItem, quantity: 1 }];
+    });
+    setIsOpen(true);
+  };
+
+  const removeItem = (id: string) => {
+    setItems((prev) => prev.filter((i) => i.id !== id));
+  };
+
+  const updateQuantity = (id: string, delta: number) => {
+    setItems((prev) =>
+      prev
         .map((i) => {
           if (i.id === id) {
             const newQty = i.quantity + delta;
@@ -59,7 +82,28 @@ export const useCart = create<CartStore>((set) => ({
           }
           return i;
         })
-        .filter(Boolean) as CartItem[],
-    })),
-  clearCart: () => set({ items: [] }),
-}));
+        .filter(Boolean) as CartItem[]
+    );
+  };
+
+  const clearCart = () => setItems([]);
+
+  return (
+    <CartContext.Provider
+      value={{
+        items,
+        isOpen,
+        openCart,
+        closeCart,
+        addItem,
+        removeItem,
+        updateQuantity,
+        clearCart,
+      }}
+    >
+      {children}
+    </CartContext.Provider>
+  );
+};
+
+export const useCart = () => useContext(CartContext);
