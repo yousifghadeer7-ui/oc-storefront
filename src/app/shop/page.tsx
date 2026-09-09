@@ -13,18 +13,25 @@ const sampleProducts = Array.from({ length: 44 }).map((_, i) => {
     id: `prod-${i + 1}`,
     title: `Classic Item ${i + 1}`,
     handle: `classic-item-${i + 1}`,
-    // توفير السعر بجميع الأشكال الممكنة لتجنب NaN
-    price: 290,
-    amount: 290,
+    // حقول السعر بكافة التسميات الممكنة
+    price: "290",
+    regularPrice: "290",
+    originalPrice: "290",
+    value: 290,
+    cost: 290,
     priceRange: {
       minVariantPrice: {
         amount: "290",
         currencyCode: "USD",
       },
+      maxVariantPrice: {
+        amount: "290",
+        currencyCode: "USD",
+      },
     },
-    // توفير الصور بجميع الصيغ المتوقعة
+    // حقول الصور
     image: imageUrl,
-    images: [imageUrl, { url: imageUrl, altText: "Product Image" }],
+    images: [{ url: imageUrl, altText: "Product Image" }],
     featuredImage: {
       url: imageUrl,
       altText: "Product Image",
