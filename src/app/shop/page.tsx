@@ -3,6 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { ProductCard } from "@/components/ProductCard";
+import { getProducts } from "@/lib/shopify";
 
 function ShopContent() {
   const searchParams = useSearchParams();
@@ -16,13 +17,10 @@ function ShopContent() {
     async function loadProducts() {
       setLoading(true);
       try {
-        const res = await fetch("/api/products");
-        if (res.ok) {
-          const data = await res.json();
-          setProducts(data.products || data || []);
-        }
+        const data = await getProducts();
+        setProducts(data || []);
       } catch (e) {
-        console.error(e);
+        console.error("Error fetching products:", e);
       } finally {
         setLoading(false);
       }
@@ -33,7 +31,8 @@ function ShopContent() {
   const filteredProducts = products.filter((product) => {
     if (categoryParam !== "all" && categoryParam !== "new") {
       const pCat = (product.category || product.productType || "").toLowerCase();
-      if (!pCat.includes(categoryParam)) return false;
+      const tags = Array.isArray(product.tags) ? product.tags.join(" ").toLowerCase() : "";
+      if (!pCat.includes(categoryParam) && !tags.includes(categoryParam)) return false;
     }
     if (queryParam) {
       const title = (product.title || "").toLowerCase();
@@ -77,7 +76,7 @@ function ShopContent() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
           {filteredProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard key={product.id || product.handle} product={product} />
           ))}
         </div>
       )}
