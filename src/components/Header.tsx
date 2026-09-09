@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCart } from "@/lib/cart";
 import { useWishlist } from "@/lib/wishlist";
-import { IconCart, IconHeart, IconSearch } from "@/components/Icons";
 
 export function Header() {
   const { count = 0, openCart } = useCart();
@@ -42,12 +41,18 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-5">
+          {/* Search Icon */}
           <button onClick={() => setSearchOpen(!searchOpen)} aria-label="Search" className="text-ink hover:text-gold transition">
-            <IconSearch className="h-5 w-5" />
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
           </button>
 
+          {/* Wishlist Icon */}
           <Link href="/wishlist" aria-label="Wishlist" className="relative text-ink hover:text-gold transition">
-            <IconHeart className="h-5 w-5" />
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
             {wishlistCount > 0 && (
               <span className="absolute -top-1 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-gold text-[10px] font-bold text-ink">
                 {wishlistCount}
@@ -55,8 +60,11 @@ export function Header() {
             )}
           </Link>
 
+          {/* Cart Icon */}
           <button onClick={openCart} aria-label="Cart" className="relative text-ink hover:text-gold transition">
-            <IconCart className="h-5 w-5" />
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+            </svg>
             {count > 0 && (
               <span className="absolute -top-1 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-ink text-[10px] font-bold text-paper">
                 {count}
