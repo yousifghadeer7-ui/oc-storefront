@@ -2,8 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
-import ProductCard from "@/components/ProductCard";
-// إذا كانت المنتجات تأتي من ملف محلي استدعها هنا، أو استخدم دالة Shopify الخاص بك
+import { ProductCard } from "@/components/ProductCard";
 import { getProducts } from "@/lib/shopify"; 
 
 function ShopContent() {
@@ -18,7 +17,6 @@ function ShopContent() {
     async function loadProducts() {
       setLoading(true);
       try {
-        // جلب المنتجات الأساسية
         const data = await getProducts();
         setProducts(data || []);
       } catch (e) {
@@ -30,7 +28,6 @@ function ShopContent() {
     loadProducts();
   }, []);
 
-  // فلترة المنتجات بناءً على الخيار المحدد في الهيدر
   const filteredProducts = products.filter((product) => {
     if (categoryParam !== "all" && categoryParam !== "new") {
       const pCat = (product.category || product.productType || "").toLowerCase();
