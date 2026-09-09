@@ -64,8 +64,9 @@ export default async function ShopPage({ searchParams }: Props) {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
           {filteredProducts.map((product: any) => {
-            const handle = product.handle || product.id;
-            const price = product.price ?? product.priceRange?.minVariantPrice?.amount ?? "290";
+            // استخدام slug أو handle أو id المتوافق مع المجلد product/[slug]
+            const productSlug = product.slug || product.handle || product.id;
+            const price = product.price ?? product.priceRange?.minVariantPrice?.amount ?? "0";
             const imageUrl =
               product.image ||
               product.images?.[0]?.url ||
@@ -75,8 +76,8 @@ export default async function ShopPage({ searchParams }: Props) {
 
             return (
               <Link
-                key={product.id || handle}
-                href={`/products/${handle}`}
+                key={product.id || productSlug}
+                href={`/product/${productSlug}`}
                 className="group block cursor-pointer"
               >
                 <div className="relative aspect-[3/4] w-full overflow-hidden bg-sand/20 mb-3">
