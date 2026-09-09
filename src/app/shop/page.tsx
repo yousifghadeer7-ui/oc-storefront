@@ -4,15 +4,29 @@ interface Props {
   searchParams: Promise<{ cat?: string; q?: string }>;
 }
 
-// قائمة المنتجات مباشرة لتجنب أخطاء الاستيراد مفقود المسار
 const sampleProducts = Array.from({ length: 44 }).map((_, i) => ({
   id: `prod-${i + 1}`,
   title: `Product Item ${i + 1}`,
   handle: `product-item-${i + 1}`,
-  price: "$290",
+  price: 290,
+  priceRange: {
+    minVariantPrice: {
+      amount: "290.0",
+      currencyCode: "USD",
+    },
+  },
+  featuredImage: {
+    url: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80",
+    altText: "Product Image",
+  },
+  images: [
+    {
+      url: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80",
+      altText: "Product Image",
+    },
+  ],
   category: i % 4 === 0 ? "outerwear" : i % 4 === 1 ? "tailoring" : i % 4 === 2 ? "knitwear" : "dresses",
   tags: [i % 4 === 0 ? "outerwear" : i % 4 === 1 ? "tailoring" : i % 4 === 2 ? "knitwear" : "dresses"],
-  image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80",
 }));
 
 export default async function ShopPage({ searchParams }: Props) {
