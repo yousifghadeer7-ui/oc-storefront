@@ -1,35 +1,24 @@
-"use client";
-
-import { useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
 import { ProductCard } from "@/components/ProductCard";
+import { getProducts } from "@/lib/shopify";
 
-function ShopContent() {
-  const searchParams = useSearchParams();
-  const categoryParam = searchParams.get("cat")?.toLowerCase() || "all";
-  const queryParam = searchParams.get("q")?.toLowerCase() || "";
+interface Props {
+  searchParams: Promise<{ cat?: string; q?: string }>;
+}
 
-  const [products, setProducts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+export default async function ShopPage({ searchParams }: Props) {
+  const params = await searchParams;
+  const categoryParam = params.cat?.toLowerCase() || "all";
+  const queryParam = params.q?.toLowerCase() || "";
 
-  useEffect(() => {
-    async function loadProducts() {
-      setLoading(true);
-      try {
-        const res = await fetch("/api/products");
-        if (res.ok) {
-          const data = await res.json();
-          setProducts(Array.isArray(data) ? data : data.products || []);
-        }
-      } catch (e) {
-        console.error("Fetch error:", e);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadProducts();
-  }, []);
+  // جلب المنتجات المباشر من خادم المباشر
+  let products: any[] = [];
+  try {
+    products = (await getProducts()) || [];
+  } catch (e) {
+    console.error(e);
+  }
 
+  // التصفية والفلترة
   const filteredProducts = products.filter((product) => {
     if (categoryParam !== "all" && categoryParam !== "new") {
       const pCat = (product.category || product.productType || "").toLowerCase();
@@ -67,11 +56,7 @@ function ShopContent() {
         </div>
       </div>
 
-      {loading ? (
-        <div className="py-20 text-center text-xs uppercase tracking-widest text-taupe">
-          Loading products...
-        </div>
-      ) : filteredProducts.length === 0 ? (
+      {filteredProducts.length === 0 ? (
         <div className="py-20 text-center text-sm text-taupe">
           No products found in this collection.
         </div>
@@ -83,13 +68,5 @@ function ShopContent() {
         </div>
       )}
     </div>
-  );
-}
-
-export default function ShopPage() {
-  return (
-    <Suspense fallback={<div className="p-12 text-center text-xs tracking-widest uppercase">Loading...</div>}>
-      <ShopContent />
-    </Suspense>
   );
 }
