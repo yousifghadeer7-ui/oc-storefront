@@ -1,12 +1,7 @@
-"use client";
-
 import "./globals.css";
-import { Inter, Playfair_Display } from "next/font/google";
 import { CartProvider } from "@/lib/cart";
 import { WishlistProvider } from "@/lib/wishlist";
-
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair" });
+import { ToastProvider } from "@/lib/toast";
 
 export default function RootLayout({
   children,
@@ -14,13 +9,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
+    <html lang="en">
       <body className="bg-paper text-ink antialiased">
-        <CartProvider>
-          <WishlistProvider>
-            {children}
-          </WishlistProvider>
-        </CartProvider>
+        <ToastProvider>
+          <CartProvider>
+            <WishlistProvider>
+              {children}
+            </WishlistProvider>
+          </CartProvider>
+        </ToastProvider>
       </body>
     </html>
   );
