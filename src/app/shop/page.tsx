@@ -5,28 +5,52 @@ interface Props {
   searchParams: Promise<{ cat?: string; q?: string }>;
 }
 
-// استخراج السعر بجميع الصيغ الممكنة لمنع الـ $0.00
-function getValidPrice(product: any): number {
-  const p = product;
-  const possiblePrices = [
-    p?.price,
-    p?.price_amount,
-    p?.amount,
-    p?.variants?.[0]?.price,
-    p?.priceRange?.minVariantPrice?.amount,
-    p?.original_price,
-    p?.sale_price,
-  ];
+// دالة فحص واستخراج السعر الحقيقي بدقة من كافة الهياكل الممكنة
+function extractRealPrice(item: any): number {
+  if (!item) return 0;
 
-  for (const val of possiblePrices) {
-    if (val !== undefined && val !== null) {
-      const num = typeof val === "number" ? val : parseFloat(String(val));
-      if (!isNaN(num) && num > 0) return num;
+  // 1. فحص الحقول المباشرة
+  if (typeof item.price === "number" && item.price > 0) return item.price;
+  if (typeof item.price === "string" && !isNaN(parseFloat(item.price)) && parseFloat(item.price) > 0) {
+    return parseFloat(item.price);
+  }
+
+  // 2. فحص مصفوفة Variants (Shopify & Custom APIs)
+  if (Array.isArray(item.variants) && item.variants.length > 0) {
+    const v = item.variants[0];
+    if (v?.price) {
+      const vp = typeof v.price === "number" ? v.price : parseFloat(v.price);
+      if (!isNaN(vp) && vp > 0) return vp;
+    }
+    if (v?.price_amount) {
+      const vpa = typeof v.price_amount === "number" ? v.price_amount : parseFloat(v.price_amount);
+      if (!isNaN(vpa) && vpa > 0) return vpa;
     }
   }
 
-  // إذا لم يجد أي سعر حقيقي، يضع سعر افتراضي منطقي بدلاً من 0
-  return 120;
+  // 3. فحص كائنات الأسعار المتداخلة (GraphQL / Shopify API)
+  if (item.priceRange?.minVariantPrice?.amount) {
+    const p = parseFloat(item.priceRange.minVariantPrice.amount);
+    if (!isNaN(p) && p > 0) return p;
+  }
+
+  // 4. فحص حقول AliExpress المخصصة
+  const altFields = [
+    item.price_amount,
+    item.original_price,
+    item.sale_price,
+    item.target_sale_price,
+    item.app_sale_price,
+  ];
+
+  for (const field of altFields) {
+    if (field !== undefined && field !== null) {
+      const parsed = typeof field === "number" ? field : parseFloat(String(field));
+      if (!isNaN(parsed) && parsed > 0) return parsed;
+    }
+  }
+
+  return 0;
 }
 
 export default async function ShopPage({ searchParams }: Props) {
@@ -88,14 +112,8 @@ export default async function ShopPage({ searchParams }: Props) {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
           {filteredProducts.map((product: any, idx: number) => {
-            // التوجه الداخلي فقط لمنع خطأ شوبي فاي الخارجي
-            const productIdentifier =
-              product.slug ||
-              product.handle ||
-              product.id ||
-              `item-${idx}`;
-
-            const price = getValidPrice(product);
+            const productSlug = product.slug || product.handle || product.id || `item-${idx}`;
+            const price = extractRealPrice(product);
 
             const imageUrl =
               product.image ||
@@ -106,8 +124,8 @@ export default async function ShopPage({ searchParams }: Props) {
 
             return (
               <Link
-                key={product.id || productIdentifier}
-                href={`/product/${encodeURIComponent(String(productIdentifier))}`}
+                key={product.id || productSlug}
+                href={`/product/${encodeURIComponent(String(productSlug))}`}
                 className="group block cursor-pointer"
               >
                 <div className="relative aspect-[3/4] w-full overflow-hidden bg-sand/20 mb-3">
@@ -130,7 +148,7 @@ export default async function ShopPage({ searchParams }: Props) {
                   {product.title || product.name}
                 </h3>
                 <p className="text-sm font-semibold text-ink">
-                  ${price.toFixed(2)}
+                  {price > 0 ? `$${price.toFixed(2)}` : "Contact for Price"}
                 </p>
               </Link>
             );
