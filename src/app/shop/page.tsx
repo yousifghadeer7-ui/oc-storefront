@@ -1,5 +1,5 @@
 import { ProductCard } from "@/components/ProductCard";
-import { getProducts } from "@/lib/shopify";
+import productsData from "@/lib/products";
 
 interface Props {
   searchParams: Promise<{ cat?: string; q?: string }>;
@@ -10,23 +10,21 @@ export default async function ShopPage({ searchParams }: Props) {
   const categoryParam = params.cat?.toLowerCase() || "all";
   const queryParam = params.q?.toLowerCase() || "";
 
-  let products: any[] = [];
-  try {
-    products = (await getProducts({})) || [];
-  } catch (e) {
-    console.error("Shopify fetch error:", e);
-  }
+  // التعامل مع المنتجات سواء كانت المصفوفة مستوردة مباشرة أو داخل كائن
+  const rawList = Array.isArray(productsData)
+    ? productsData
+    : (productsData as any)?.products || [];
 
-  const filteredProducts = products.filter((product) => {
+  const filteredProducts = rawList.filter((product: any) => {
     if (categoryParam !== "all" && categoryParam !== "new") {
       const pCat = (product.category || product.productType || "").toLowerCase();
-      const tags = Array.isArray(product.tags) 
-        ? product.tags.join(" ").toLowerCase() 
+      const tags = Array.isArray(product.tags)
+        ? product.tags.join(" ").toLowerCase()
         : (product.tags || "").toLowerCase();
       if (!pCat.includes(categoryParam) && !tags.includes(categoryParam)) return false;
     }
     if (queryParam) {
-      const title = (product.title || "").toLowerCase();
+      const title = (product.title || product.name || "").toLowerCase();
       if (!title.includes(queryParam)) return false;
     }
     return true;
@@ -62,7 +60,7 @@ export default async function ShopPage({ searchParams }: Props) {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-          {filteredProducts.map((product) => (
+          {filteredProducts.map((product: any) => (
             <ProductCard key={product.id || product.handle} product={product} />
           ))}
         </div>
