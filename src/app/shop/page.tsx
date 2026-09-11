@@ -18,23 +18,30 @@ export default async function ShopPage({ searchParams }: Props) {
     console.error("Failed to load catalog products:", error);
   }
 
+  // تصفية المنتجات حسب القسم المحدد
   const filteredProducts = productsList.filter((product: any) => {
     if (categoryParam !== "all" && categoryParam !== "new") {
-      const pCat = (product.category || product.productType || "").toLowerCase();
+      const pCat = (product.category || product.productType || product.product_type || "").toLowerCase();
       const tags = Array.isArray(product.tags)
         ? product.tags.join(" ").toLowerCase()
         : (product.tags || "").toLowerCase();
-      if (!pCat.includes(categoryParam) && !tags.includes(categoryParam)) return false;
+      const title = (product.title || product.name || "").toLowerCase();
+
+      // البحث عن التطابق في القسم أو التاجات أو العنوان
+      const matchesCat = pCat.includes(categoryParam) || tags.includes(categoryParam) || title.includes(categoryParam);
+      if (!matchesCat) return false;
     }
+
     if (queryParam) {
       const title = (product.title || product.name || "").toLowerCase();
       if (!title.includes(queryParam)) return false;
     }
+
     return true;
   });
 
   const titleMap: Record<string, string> = {
-    all: "All Products",
+    all: "Shop All",
     new: "New Arrivals",
     outerwear: "Outerwear",
     tailoring: "Tailoring",
