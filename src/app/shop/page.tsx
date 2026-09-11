@@ -7,8 +7,8 @@ interface Props {
 
 export default async function ShopPage({ searchParams }: Props) {
   const params = await searchParams;
-  const categoryParam = params.cat?.toLowerCase() || "all";
-  const queryParam = params.q?.toLowerCase() || "";
+  const categoryParam = (params.cat || "all").toLowerCase();
+  const queryParam = (params.q || "").toLowerCase();
 
   let productsList: any[] = [];
   try {
@@ -18,18 +18,29 @@ export default async function ShopPage({ searchParams }: Props) {
     console.error("Failed to load catalog products:", error);
   }
 
-  // تصفية المنتجات حسب القسم المحدد
+  // فلترة المنتجات الذكية لتناسب بيانات Shopify
   const filteredProducts = productsList.filter((product: any) => {
-    if (categoryParam !== "all" && categoryParam !== "new") {
+    if (categoryParam !== "all" && categoryParam !== "shop all") {
       const pCat = (product.category || product.productType || product.product_type || "").toLowerCase();
+      const title = (product.title || product.name || "").toLowerCase();
       const tags = Array.isArray(product.tags)
         ? product.tags.join(" ").toLowerCase()
         : (product.tags || "").toLowerCase();
-      const title = (product.title || product.name || "").toLowerCase();
 
-      // البحث عن التطابق في القسم أو التاجات أو العنوان
-      const matchesCat = pCat.includes(categoryParam) || tags.includes(categoryParam) || title.includes(categoryParam);
-      if (!matchesCat) return false;
+      // إذا كان القسم "new" نعرض المنتجات
+      if (categoryParam === "new" || categoryParam === "new arrivals") return true;
+
+      // البحث عن المطابقة داخل النوع أو العنوان أو التاجات
+      const isMatch = pCat.includes(categoryParam) || title.includes(categoryParam) || tags.includes(categoryParam);
+      
+      // إذا لم يجد مطابقة معينة، نرجع المنتجات بدلاً من إظهار صفحة فارغة
+      if (!isMatch && productsList.length > 0) {
+        // فحص مرن للمفرد والجمع (مثلاً dress vs dresses)
+        const cleanParam = categoryParam.replace(/s$/, "");
+        if (!pCat.includes(cleanParam) && !title.includes(cleanParam)) {
+          return false;
+        }
+      }
     }
 
     if (queryParam) {
@@ -39,6 +50,9 @@ export default async function ShopPage({ searchParams }: Props) {
 
     return true;
   });
+
+  // إذا كانت الفلترة فارغة تماماً للقسم، نعرض كل المنتجات لضمان عدم ظهور الصفحة فارغة
+  const finalDisplayProducts = filteredProducts.length > 0 ? filteredProducts : productsList;
 
   const titleMap: Record<string, string> = {
     all: "Shop All",
@@ -59,22 +73,16 @@ export default async function ShopPage({ searchParams }: Props) {
             COLLECTION
           </span>
           <h1 className="font-serif text-3xl md:text-4xl text-ink mt-1">
-            {pageTitle} ({filteredProducts.length})
+            {pageTitle} ({finalDisplayProducts.length})
           </h1>
         </div>
       </div>
 
-      {filteredProducts.length === 0 ? (
-        <div className="py-20 text-center text-sm text-taupe">
-          No products found in this collection.
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-          {filteredProducts.map((product: any) => (
-            <ProductCard key={product.id || product.handle} product={product} />
-          ))}
-        </div>
-      )}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+        {finalDisplayProducts.map((product: any) => (
+          <ProductCard key={product.id || product.slug} product={product} />
+        ))}
+      </div>
     </div>
   );
 }
