@@ -32,14 +32,6 @@ function normalizeTags(tags: any): string[] {
   return [];
 }
 
-function cleanDomain(input: string) {
-  return (input || "")
-    .trim()
-    .replace(/^https?:\/\//, "")
-    .replace(/\/+$/, "")
-    .split("/")[0];
-}
-
 function pickCategory(product: any): string {
   const pt = (product?.product_type || "").trim();
   if (pt) return pt;
@@ -65,43 +57,26 @@ function pickCategory(product: any): string {
 
 export async function getProducts() {
   try {
-    const rawDomain =
-      process.env.SHOPIFY_STORE_DOMAIN ||
-      process.env.SHOPIFY_STORE_URL ||
-      "kw8nk1-ix.myshopify.com";
-
-    const domain = cleanDomain(rawDomain);
+    // نثبت اسم المتجر الصحيح مباشرة لمنع أي خطأ من متغيرات Vercel
+    const domain = "kw8nk1-ix.myshopify.com";
     const url = `https://${domain}/products.json?limit=250`;
-
-    console.log("[catalog] fetching:", url);
 
     const res = await fetch(url, {
       cache: "no-store",
       headers: {
         Accept: "application/json",
-        "User-Agent": "oc-storefront/1.0",
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
       },
     });
 
-    const text = await res.text();
-    console.log("[catalog] status:", res.status);
-    console.log("[catalog] preview:", text.slice(0, 200));
-
     if (!res.ok) {
-      console.error("[catalog] failed:", res.status);
+      console.error(`[Shopify Fetch Error] Status: ${res.status}`);
       return [];
     }
 
-    let data: any;
-    try {
-      data = JSON.parse(text);
-    } catch {
-      console.error("[catalog] not JSON:", text.slice(0, 300));
-      return [];
-    }
-
+    const data = await res.json();
     const items = Array.isArray(data) ? data : data?.products || [];
-    console.log("[catalog] count:", items.length);
 
     return items.map((item: any, idx: number) => {
       const priceStr = item?.variants?.[0]?.price;
@@ -119,16 +94,16 @@ export async function getProducts() {
       return {
         id: String(item.id || `prod-${idx}`),
         slug: item.handle || `product-${item.id || idx}`,
-        title: item.title || "Item",
+        title: item.title || "Luxury Item",
         price: priceVal,
         category,
         image: img,
-        description: stripHtml(item.body_html) || "",
+        description: stripHtml(item.body_html) || "Premium quality product.",
         tags: normalizeTags(item.tags),
       };
     });
   } catch (error) {
-    console.error("[catalog] error:", error);
+    console.error("Error in getProducts:", error);
     return [];
   }
 }
