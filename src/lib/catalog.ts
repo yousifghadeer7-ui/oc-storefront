@@ -5,7 +5,7 @@ export const FLAT_SHIPPING = 15;
 
 export const CATEGORIES = [
   "All",
-  "New Arrivals",
+  "New Arrivals", 
   "Outerwear",
   "Tailoring",
   "Knitwear",
@@ -28,10 +28,7 @@ function stripHtml(html: string) {
 function normalizeTags(tags: any): string[] {
   if (Array.isArray(tags)) return tags.map(String).map((t) => t.trim()).filter(Boolean);
   if (typeof tags === "string")
-    return tags
-      .split(",")
-      .map((t) => t.trim())
-      .filter(Boolean);
+    return tags.split(",").map((t) => t.trim()).filter(Boolean);
   return [];
 }
 
@@ -39,7 +36,8 @@ function cleanDomain(input: string) {
   return (input || "")
     .trim()
     .replace(/^https?:\/\//, "")
-    .replace(/\/+$/, "");
+    .replace(/\/+$/, "")
+    .split("/")[0];
 }
 
 function pickCategory(product: any): string {
@@ -75,34 +73,54 @@ export async function getProducts() {
     const domain = cleanDomain(rawDomain);
     const url = `https://${domain}/products.json?limit=250`;
 
+    console.log("[catalog] fetching:", url);
+
     const res = await fetch(url, {
       cache: "no-store",
-      headers: { Accept: "application/json" },
+      headers: {
+        Accept: "application/json",
+        "User-Agent": "oc-storefront/1.0",
+      },
     });
 
-    if (!res.ok) throw new Error(`Shopify fetch failed: ${res.status} ${res.statusText}`);
+    const text = await res.text();
+    console.log("[catalog] status:", res.status);
+    console.log("[catalog] body preview:", text.slice(0, 200));
 
-    const data = await res.json();
+    if (!res.ok) {
+      console.error("[catalog] fetch failed:", res.status);
+      return [];
+    }
+
+    let data: any;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      console.error("[catalog] not JSON:", text.slice(0, 300));
+      return [];
+    }
+
     const items = Array.isArray(data) ? data : data?.products || [];
+    console.log("[catalog] products count:", items.length);
 
     return items.map((item: any, idx: number) => {
-      let priceVal = 120;
-      if (item?.variants?.[0]?.price) priceVal = parseFloat(item.variants[0].price);
-      else if (typeof item.price === "number" && item.price > 0) priceVal = item.price;
+      const priceStr = item?.variants?.[0]?.price;
+      let priceVal = priceStr ? parseFloat(priceStr) : 120;
+      if (isNaN(priceVal) || priceVal <= 0) priceVal = 120;
 
       const img =
-        item.image?.src ||
-        item.images?.[0]?.src ||
-        item.featured_image?.src ||
+        item?.image?.src ||
+        item?.images?.[0]?.src ||
+        item?.featured_image?.src ||
         "";
 
       const category = pickCategory(item);
 
       return {
-        id: item.id || `prod-${idx}`,
+        id: String(item.id || `prod-${idx}`),
         slug: item.handle || `product-${item.id || idx}`,
         title: item.title || "Item",
-        price: isNaN(priceVal) || priceVal <= 0 ? 120 : priceVal,
+        price: priceVal,
         category,
         image: img,
         description: stripHtml(item.body_html) || "",
@@ -110,7 +128,7 @@ export async function getProducts() {
       };
     });
   } catch (error) {
-    console.error("Error loading products catalog:", error);
+    console.error("[catalog] error:", error);
     return [];
   }
 }
