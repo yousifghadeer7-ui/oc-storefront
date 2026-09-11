@@ -1,4 +1,3 @@
-// src/app/product/[slug]/page.tsx
 "use client";
 
 import { use } from "react";
@@ -8,13 +7,6 @@ import { useCart } from "@/lib/cart";
 
 interface Props {
   params: Promise<{ slug: string }>;
-}
-
-function parseProductPrice(product: any): number {
-  if (typeof product.price === "number" && product.price > 0) return product.price;
-  if (typeof product.price === "string" && !isNaN(parseFloat(product.price)))
-    return parseFloat(product.price);
-  return 120;
 }
 
 export default function ProductDetailPage({ params }: Props) {
@@ -29,10 +21,13 @@ export default function ProductDetailPage({ params }: Props) {
       try {
         const data = await getProducts();
         const target = String(resolvedParams.slug || "").toLowerCase();
-        const found = data.find((p: any) =>
-          String(p.slug || "").toLowerCase() === target ||
-          String(p.id || "").toLowerCase() === target
-        );
+        const found = data.find((p: any) => {
+          return (
+            String(p.slug || "").toLowerCase() === target ||
+            String(p.id || "").toLowerCase() === target
+          );
+        });
+
         setProduct(found || null);
       } catch (error) {
         console.error("Failed to load product:", error);
@@ -43,28 +38,32 @@ export default function ProductDetailPage({ params }: Props) {
     fetchProduct();
   }, [resolvedParams.slug]);
 
-  if (loading)
+  if (loading) {
     return (
       <div className="mx-auto max-w-7xl px-6 py-20 text-center text-sm text-taupe">
-        Loading...
+        Loading product details...
       </div>
     );
+  }
 
-  if (!product)
+  if (!product) {
     return (
       <div className="mx-auto max-w-7xl px-6 py-20 text-center text-sm text-taupe">
         Product not found.
       </div>
     );
+  }
 
-  const realPrice = parseProductPrice(product);
+  const realPrice = Number(product.price) || 120;
   const imageUrl = product.image || "";
+  const variantIdToSend = String(product.variantId || product.id);
 
   const handleAddToCart = () => {
     addItem({
-      id: product.id,
-      title: product.title,
-      price: realPrice,
+      id: variantIdToSend, // استخدام variantId كـ ID للسلة
+      variantId: variantIdToSend,
+      title: product.title || "Product",
+      price: realPrice, // رقم مضمون
       image: imageUrl,
       quantity: 1,
     });
@@ -84,7 +83,7 @@ export default function ProductDetailPage({ params }: Props) {
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-taupe">
-              No Image
+              No Image Available
             </div>
           )}
         </div>
@@ -99,9 +98,11 @@ export default function ProductDetailPage({ params }: Props) {
           <p className="text-2xl font-semibold text-ink">
             ${realPrice.toFixed(2)}
           </p>
+
           <p className="text-xs text-taupe leading-relaxed border-t border-b border-sand/40 py-4">
-            {product.description || "High quality luxury apparel."}
+            {product.description || "High quality apparel crafted with premium materials."}
           </p>
+
           <button
             onClick={handleAddToCart}
             className="w-full py-4 bg-ink text-white font-medium hover:bg-ink/90 transition active:scale-[0.99]"
