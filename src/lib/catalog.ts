@@ -1,5 +1,6 @@
-// التكلفة المطلوبة للشحن المجاني المطلوبة في السلة
+// المتغيرات المطلوبة في النظام وبناء السلة والطلبات
 export const FREE_SHIPPING_THRESHOLD = 200;
+export const FLAT_SHIPPING = 15;
 
 export async function getProducts() {
   try {
