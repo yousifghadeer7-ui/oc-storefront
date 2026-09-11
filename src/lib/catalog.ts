@@ -2,6 +2,7 @@
 
 export const FREE_SHIPPING_THRESHOLD = 200;
 export const FLAT_SHIPPING = 15;
+export const SHOPIFY_DOMAIN = "kw8nk1-ix.myshopify.com";
 
 export const CATEGORIES = [
   "All",
@@ -57,9 +58,7 @@ function pickCategory(product: any): string {
 
 export async function getProducts() {
   try {
-    // نثبت اسم المتجر الصحيح مباشرة لمنع أي خطأ من متغيرات Vercel
-    const domain = "kw8nk1-ix.myshopify.com";
-    const url = `https://${domain}/products.json?limit=250`;
+    const url = `https://${SHOPIFY_DOMAIN}/products.json?limit=250`;
 
     const res = await fetch(url, {
       cache: "no-store",
@@ -70,40 +69,42 @@ export async function getProducts() {
       },
     });
 
-    if (!res.ok) {
-      console.error(`[Shopify Fetch Error] Status: ${res.status}`);
-      return [];
-    }
+    if (!res.ok) return [];
 
     const data = await res.json();
     const items = Array.isArray(data) ? data : data?.products || [];
 
     return items.map((item: any, idx: number) => {
-      const priceStr = item?.variants?.[0]?.price;
-      let priceVal = priceStr ? parseFloat(priceStr) : 120;
+      const firstVariant = item?.variants?.[0];
+      
+      // تحويل السعر إلى رقم صافي لمنع NaN
+      let rawPrice = firstVariant?.price || item?.price || "120";
+      let priceVal = parseFloat(String(rawPrice));
       if (isNaN(priceVal) || priceVal <= 0) priceVal = 120;
 
       const img =
         item?.image?.src ||
         item?.images?.[0]?.src ||
-        item?.featured_image?.src ||
+        firstVariant?.featured_image?.src ||
         "";
 
-      const category = pickCategory(item);
+      // variantId هو الرقم المطلوب بالظبط لصفحة دفع شوبيفاي
+      const vId = String(firstVariant?.id || item.id);
 
       return {
         id: String(item.id || `prod-${idx}`),
+        variantId: vId,
         slug: item.handle || `product-${item.id || idx}`,
         title: item.title || "Luxury Item",
-        price: priceVal,
-        category,
+        price: priceVal, // رقم مضمون
+        category: pickCategory(item),
         image: img,
         description: stripHtml(item.body_html) || "Premium quality product.",
         tags: normalizeTags(item.tags),
       };
     });
   } catch (error) {
-    console.error("Error in getProducts:", error);
+    console.error("Error fetching products:", error);
     return [];
   }
 }
