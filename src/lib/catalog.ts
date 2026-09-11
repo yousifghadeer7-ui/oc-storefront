@@ -5,7 +5,7 @@ export const FLAT_SHIPPING = 15;
 
 export const CATEGORIES = [
   "All",
-  "New Arrivals", 
+  "New Arrivals",
   "Outerwear",
   "Tailoring",
   "Knitwear",
@@ -85,10 +85,10 @@ export async function getProducts() {
 
     const text = await res.text();
     console.log("[catalog] status:", res.status);
-    console.log("[catalog] body preview:", text.slice(0, 200));
+    console.log("[catalog] preview:", text.slice(0, 200));
 
     if (!res.ok) {
-      console.error("[catalog] fetch failed:", res.status);
+      console.error("[catalog] failed:", res.status);
       return [];
     }
 
@@ -101,7 +101,7 @@ export async function getProducts() {
     }
 
     const items = Array.isArray(data) ? data : data?.products || [];
-    console.log("[catalog] products count:", items.length);
+    console.log("[catalog] count:", items.length);
 
     return items.map((item: any, idx: number) => {
       const priceStr = item?.variants?.[0]?.price;
