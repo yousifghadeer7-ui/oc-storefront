@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Hero3D } from "@/components/Hero3D";
 import { getProducts } from "@/lib/catalog";
 import { ProductCard } from "@/components/ProductCard";
 import { Newsletter } from "@/components/Newsletter";
@@ -24,16 +23,39 @@ const STANDARDS = [
 ] as const;
 
 export default async function HomePage() {
-  // جلب منتجات شوبي فاي المباشرة
+  // جلب المنتجات المباشرة من متجر شوبي فاي
   const products = await getProducts();
   const featured = products.slice(0, 4);
 
   return (
     <main className="min-h-screen bg-paper text-ink">
-      {/* 1. قسم الـ 3D التفاعلي مع حركة الماوس */}
-      <Hero3D />
+      {/* 1. قسم الواجهة الفخمة الأصلية (Hero Banner) */}
+      <section className="relative h-[80vh] min-h-[500px] w-full overflow-hidden bg-ink text-paper">
+        <img
+          src={px(20231996, 1800, 1000)}
+          alt="OC Studio Coat"
+          className="absolute inset-0 h-full w-full object-cover opacity-80"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/30 to-ink/20" />
+        <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-12 max-w-7xl mx-auto w-full">
+          <p className="text-[10px] font-semibold tracking-[0.4em] uppercase text-sand mb-2">
+            Autumn / Winter 2026
+          </p>
+          <h1 className="font-display text-4xl md:text-6xl max-w-xl font-light leading-tight mb-6">
+            Considered Clothing Made To Outlast
+          </h1>
+          <div>
+            <Link
+              href="/shop"
+              className="inline-block bg-paper text-ink px-8 py-4 text-xs font-semibold uppercase tracking-[0.2em] hover:bg-sand transition duration-300"
+            >
+              Explore Collection
+            </Link>
+          </div>
+        </div>
+      </section>
 
-      {/* 2. أقسام التصفح السريع */}
+      {/* 2. أقسام التصفح المجهزة */}
       <section className="mx-auto max-w-7xl px-4 py-16 md:px-8">
         <div className="flex items-end justify-between border-b border-line pb-6">
           <div>
@@ -72,7 +94,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* 3. المنتجات المميزة من شوبي فاي */}
+      {/* 3. منتجات شوبي فاي الحقيقية */}
       <section className="mx-auto max-w-7xl px-4 py-12 md:px-8">
         <div className="flex items-end justify-between border-b border-line pb-6">
           <div>
@@ -96,7 +118,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* 4. معايير الجودة */}
+      {/* 4. معايير البراند */}
       <section className="border-t border-line bg-sand/10 py-20">
         <div className="mx-auto max-w-7xl px-4 md:px-8">
           <div className="grid gap-12 md:grid-cols-3">
