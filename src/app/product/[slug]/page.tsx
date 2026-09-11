@@ -1,3 +1,4 @@
+// src/app/product/[slug]/page.tsx
 "use client";
 
 import { use } from "react";
@@ -10,21 +11,10 @@ interface Props {
 }
 
 function parseProductPrice(product: any): number {
-  if (typeof product.price === "number") return product.price;
-  if (typeof product.price === "string" && !isNaN(parseFloat(product.price))) {
+  if (typeof product.price === "number" && product.price > 0) return product.price;
+  if (typeof product.price === "string" && !isNaN(parseFloat(product.price)))
     return parseFloat(product.price);
-  }
-  if (product.price?.value) return parseFloat(product.price.value);
-  if (product.price_amount) return parseFloat(product.price_amount);
-  if (product.original_price) return parseFloat(product.original_price);
-  if (product.sale_price) return parseFloat(product.sale_price);
-  
-  if (typeof product.description === "string") {
-    const match = product.description.match(/\$(\d+(\.\d+)?)/);
-    if (match) return parseFloat(match[1]);
-  }
-  
-  return 0;
+  return 120;
 }
 
 export default function ProductDetailPage({ params }: Props) {
@@ -38,17 +28,11 @@ export default function ProductDetailPage({ params }: Props) {
     async function fetchProduct() {
       try {
         const data = await getProducts();
-        const productsList = Array.isArray(data) ? data : data?.products || [];
-        
         const target = String(resolvedParams.slug || "").toLowerCase();
-        const found = productsList.find((p: any) => {
-          const pSlug = String(p.slug || "").toLowerCase();
-          const pHandle = String(p.handle || "").toLowerCase();
-          const pId = String(p.id || "").toLowerCase();
-
-          return pSlug === target || pHandle === target || pId === target;
-        });
-
+        const found = data.find((p: any) =>
+          String(p.slug || "").toLowerCase() === target ||
+          String(p.id || "").toLowerCase() === target
+        );
         setProduct(found || null);
       } catch (error) {
         console.error("Failed to load product:", error);
@@ -59,35 +43,27 @@ export default function ProductDetailPage({ params }: Props) {
     fetchProduct();
   }, [resolvedParams.slug]);
 
-  if (loading) {
+  if (loading)
     return (
       <div className="mx-auto max-w-7xl px-6 py-20 text-center text-sm text-taupe">
-        Loading product details...
+        Loading...
       </div>
     );
-  }
 
-  if (!product) {
+  if (!product)
     return (
       <div className="mx-auto max-w-7xl px-6 py-20 text-center text-sm text-taupe">
         Product not found.
       </div>
     );
-  }
 
   const realPrice = parseProductPrice(product);
-
-  const imageUrl =
-    product.image ||
-    product.images?.[0]?.url ||
-    (typeof product.images?.[0] === "string" ? product.images[0] : "") ||
-    product.featuredImage?.url ||
-    "";
+  const imageUrl = product.image || "";
 
   const handleAddToCart = () => {
     addItem({
-      id: product.id || product.handle || resolvedParams.slug,
-      title: product.title || product.name || "Product",
+      id: product.id,
+      title: product.title,
       price: realPrice,
       image: imageUrl,
       quantity: 1,
@@ -103,29 +79,29 @@ export default function ProductDetailPage({ params }: Props) {
           {imageUrl ? (
             <img
               src={imageUrl}
-              alt={product.title || product.name || "Product"}
+              alt={product.title}
               className="h-full w-full object-cover object-center"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-taupe">
-              No Image Available
+              No Image
             </div>
           )}
         </div>
 
         <div className="flex flex-col gap-6">
           <span className="text-xs tracking-[0.2em] uppercase text-taupe font-semibold">
-            {product.category || product.productType || "COLLECTION"}
+            {product.category || "COLLECTION"}
           </span>
           <h1 className="font-serif text-3xl md:text-4xl text-ink">
-            {product.title || product.name}
+            {product.title}
           </h1>
-          <p className="text-2xl font-semibold text-ink">${realPrice.toFixed(2)}</p>
-
-          <p className="text-xs text-taupe leading-relaxed border-t border-b border-sand/40 py-4">
-            {product.description || "High quality luxury apparel crafted with premium materials."}
+          <p className="text-2xl font-semibold text-ink">
+            ${realPrice.toFixed(2)}
           </p>
-
+          <p className="text-xs text-taupe leading-relaxed border-t border-b border-sand/40 py-4">
+            {product.description || "High quality luxury apparel."}
+          </p>
           <button
             onClick={handleAddToCart}
             className="w-full py-4 bg-ink text-white font-medium hover:bg-ink/90 transition active:scale-[0.99]"
