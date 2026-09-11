@@ -1,10 +1,8 @@
 // src/lib/catalog.ts
 
-// الثوابت المطلوبة في السلة والطلبات
 export const FREE_SHIPPING_THRESHOLD = 200;
 export const FLAT_SHIPPING = 15;
 
-// تصدير القائمة بنوعين لدعم الـ Footer والـ Nav في نفس الوقت
 export const CATEGORIES = [
   "All",
   "New Arrivals",
@@ -28,7 +26,6 @@ function stripHtml(html: string) {
 }
 
 function normalizeTags(tags: any): string[] {
-  // Shopify /products.json غالباً يرجع tags كسلسلة "tag1, tag2"
   if (Array.isArray(tags)) return tags.map(String).map((t) => t.trim()).filter(Boolean);
   if (typeof tags === "string")
     return tags
@@ -38,13 +35,19 @@ function normalizeTags(tags: any): string[] {
   return [];
 }
 
+function cleanDomain(input: string) {
+  return (input || "")
+    .trim()
+    .replace(/^https?:\/\//, "")
+    .replace(/\/+$/, "");
+}
+
 function pickCategory(product: any): string {
-  // جرّب product_type أولاً
   const pt = (product?.product_type || "").trim();
   if (pt) return pt;
 
-  // بعدها من tags (أقرب شيء للتصنيفات عندك)
-  const tagsArr = normalizeTags(product?.tags).map((t) => t.toLowerCase());
+  const rawTags = normalizeTags(product?.tags);
+  const tagsLower = rawTags.map((t) => t.toLowerCase());
 
   const known = [
     { key: "new arrivals", label: "New Arrivals" },
@@ -56,57 +59,53 @@ function pickCategory(product: any): string {
   ];
 
   for (const k of known) {
-    if (tagsArr.includes(k.key)) return k.label;
+    if (tagsLower.includes(k.key)) return k.label;
   }
 
-  // لو ما لقينا أي شيء معروف خذ أول tag (إن وجد)
-  const rawTags = normalizeTags(product?.tags);
-  if (rawTags[0]) return rawTags[0];
-
-  return "COLLECTION";
+  return rawTags[0] || "COLLECTION";
 }
 
 export async function getProducts() {
   try {
-    const STORE_DOMAIN =
-      process.env.SHOPIFY_STORE_DOMAIN?.trim() || "kw8nk1-ix.myshopify.com";
+    const rawDomain =
+      process.env.SHOPIFY_STORE_DOMAIN ||
+      process.env.SHOPIFY_STORE_URL ||
+      "kw8nk1-ix.myshopify.com";
 
-    const res = await fetch(
-      `https://${STORE_DOMAIN}/products.json?limit=250`,
-      { next: { revalidate: 60 } }
-    );
+    const domain = cleanDomain(rawDomain);
+    const url = `https://${domain}/products.json?limit=250`;
 
-    if (!res.ok) throw new Error(`Failed to fetch products: ${res.status}`);
+    const res = await fetch(url, {
+      cache: "no-store",
+      headers: { Accept: "application/json" },
+    });
+
+    if (!res.ok) throw new Error(`Shopify fetch failed: ${res.status} ${res.statusText}`);
 
     const data = await res.json();
     const items = Array.isArray(data) ? data : data?.products || [];
 
     return items.map((item: any, idx: number) => {
-      // السعر
       let priceVal = 120;
-      if (typeof item.price === "number" && item.price > 0) priceVal = item.price;
-      else if (item.variants?.[0]?.price) priceVal = parseFloat(item.variants[0].price);
-      else if (item.price_amount) priceVal = parseFloat(item.price_amount);
+      if (item?.variants?.[0]?.price) priceVal = parseFloat(item.variants[0].price);
+      else if (typeof item.price === "number" && item.price > 0) priceVal = item.price;
 
-      // الصورة
       const img =
         item.image?.src ||
         item.images?.[0]?.src ||
         item.featured_image?.src ||
-        (typeof item.images?.[0] === "string" ? item.images[0] : "") ||
         "";
 
       const category = pickCategory(item);
 
       return {
         id: item.id || `prod-${idx}`,
-        slug: item.handle || item.slug || `product-${item.id || idx}`,
-        title: item.title || item.name || "Luxury Apparel Item",
+        slug: item.handle || `product-${item.id || idx}`,
+        title: item.title || "Item",
         price: isNaN(priceVal) || priceVal <= 0 ? 120 : priceVal,
-        category, // مثال: "Outerwear" / "Dresses" ...
+        category,
         image: img,
-        description: stripHtml(item.body_html) || "High quality apparel crafted with premium materials.",
-        // إضافي (اختياري) يفيد لو تحتاجه بالفلترة لاحقاً:
+        description: stripHtml(item.body_html) || "",
         tags: normalizeTags(item.tags),
       };
     });
