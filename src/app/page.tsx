@@ -143,7 +143,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* 5. Newsletter الأصلي */}
       <Newsletter />
     </>
   );
