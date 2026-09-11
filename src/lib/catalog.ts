@@ -1,6 +1,15 @@
-// المتغيرات المطلوبة في النظام وبناء السلة والطلبات
+// الثوابت والمتغيرات المطلوبة في الواجهة والـ Footer والسلة
 export const FREE_SHIPPING_THRESHOLD = 200;
 export const FLAT_SHIPPING = 15;
+
+export const CATEGORIES = [
+  { slug: "all", label: "Shop All" },
+  { slug: "new", label: "New In" },
+  { slug: "outerwear", label: "Outerwear" },
+  { slug: "tailoring", label: "Tailoring" },
+  { slug: "knitwear", label: "Knitwear" },
+  { slug: "dresses", label: "Dresses" },
+];
 
 export async function getProducts() {
   try {
