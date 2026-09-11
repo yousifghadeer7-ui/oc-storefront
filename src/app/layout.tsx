@@ -12,7 +12,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" manifest="/manifest.json"> {/* ✅ تمت الإضافة هنا */}
+      <head>
+        {/* هذه الأسطر ستجعل المتصفح يقترح تثبيت التطبيق */}
+        <link rel="apple-touch-icon" href="/icon-192.png" />
+        <meta name="theme-color" content="#000000" />
+      </head>
+      
       <body className="bg-paper text-ink antialiased flex flex-col min-h-screen">
         <ToastProvider>
           <CartProvider>
