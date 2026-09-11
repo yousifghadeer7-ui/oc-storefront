@@ -1,6 +1,8 @@
+// الثوابت المطلوبة في السلة والطلبات
 export const FREE_SHIPPING_THRESHOLD = 200;
 export const FLAT_SHIPPING = 15;
 
+// تصدير القائمة بنوعين لدعم الـ Footer والـ Nav في نفس الوقت
 export const CATEGORIES = [
   "All",
   "New Arrivals",
@@ -21,26 +23,40 @@ export const CATEGORY_OBJECTS = [
 
 export async function getProducts() {
   try {
-    // جلب منتجات أزياء وملابس فقط (Womens Dresses & Apparel)
-    const res = await fetch("https://dummyjson.com/products/category/womens-dresses", {
-      next: { revalidate: 60 },
-    });
-    
-    let items: any[] = [];
-    if (res.ok) {
-      const data = await res.json();
-      items = data.products || [];
-    }
+    const res = await fetch(
+      "https://raw.githubusercontent.com/json-iterator/test-data/master/shopify-products.json",
+      { next: { revalidate: 60 } }
+    );
 
-    return items.map((item: any, idx: number) => ({
-      id: item.id || `prod-${idx}`,
-      slug: `product-${item.id || idx}`,
-      title: item.title || "Luxury Apparel Item",
-      price: item.price || 120,
-      category: "dresses",
-      image: item.thumbnail || item.images?.[0] || "",
-      description: item.description || "High quality apparel crafted with premium materials.",
-    }));
+    if (!res.ok) throw new Error("Failed to fetch products");
+    const data = await res.json();
+
+    const items = Array.isArray(data) ? data : data?.products || [];
+
+    return items.map((item: any, idx: number) => {
+      let priceVal = 120;
+      if (typeof item.price === "number" && item.price > 0) priceVal = item.price;
+      else if (item.variants?.[0]?.price) priceVal = parseFloat(item.variants[0].price);
+      else if (item.price_amount) priceVal = parseFloat(item.price_amount);
+
+      const img =
+        item.image?.src ||
+        item.images?.[0]?.src ||
+        (typeof item.images?.[0] === "string" ? item.images[0] : "") ||
+        "";
+
+      return {
+        id: item.id || `prod-${idx}`,
+        slug: item.handle || item.slug || `product-${item.id || idx}`,
+        title: item.title || item.name || "Luxury Apparel Item",
+        price: isNaN(priceVal) || priceVal <= 0 ? 120 : priceVal,
+        category: item.product_type || item.category || "COLLECTION",
+        image: img,
+        description:
+          item.body_html?.replace(/<[^>]*>?/gm, "") ||
+          "High quality apparel crafted with premium materials.",
+      };
+    });
   } catch (error) {
     console.error("Error loading products catalog:", error);
     return [];
